@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ResourceType {
+  YOUTUBE
+  BOOK
+  PDF
+  WEBSITE
+  OTHER
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  score       Int
+
+  resources      Resource[]
+  productivities Productivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tasks")
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  title       String
+  type        ResourceType
+  url         String?
+  description String?
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("resources")
+}
+
+model Productivity {
+  id         String   @id @default(uuid())
+  percentage Int
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("productivities")
+}
