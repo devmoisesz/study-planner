@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../database/prisma.service.js";
 import type { CreateTaskData } from "../../factories/task.factory.js";
 import { TasksRepository } from "../tasks.repository.js";
-import type { RankedTask } from "../tasks.repository.js";
 import { Task } from "../../../generated/prisma/client.js";
 
 @Injectable()
@@ -11,20 +10,20 @@ export class PrismaTasksRepository extends TasksRepository {
         super();
     }
 
-    async listTasks(): Promise<RankedTask[]> {
-        const tasks = await this.prisma.task.findMany({
+    async listTasks(): Promise<Task[]> {
+        return await this.prisma.task.findMany({
             orderBy: {
                 score: 'desc'
             },
             include: {
-                _count: { select: { resources: true } }
+                resources: true,
+                _count: {
+                    select: {
+                        resources: true
+                    }
+                }
             }
         });
-
-        return tasks.map(({ _count, ...task }) => ({
-            ...task,
-            resourceCount: _count.resources
-        }));
     }
 
     async findById(id: string): Promise<Task | null> {
