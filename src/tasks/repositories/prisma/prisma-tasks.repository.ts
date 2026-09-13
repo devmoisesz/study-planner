@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../database/prisma.service.js";
 import type { CreateTaskData } from "../../factories/task.factory.js";
 import { TasksRepository } from "../tasks.repository.js";
+import type { TaskDetails } from "../tasks.repository.js";
 import { Task } from "../../../generated/prisma/client.js";
 
 @Injectable()
@@ -40,6 +41,16 @@ export class PrismaTasksRepository extends TasksRepository {
 
     async findById(id: string): Promise<Task | null> {
         return this.prisma.task.findUnique({ where: { id } });
+    }
+
+    async findDetailsById(id: string): Promise<TaskDetails | null> {
+        return this.prisma.task.findUnique({
+            where: { id },
+            include: {
+                resources: true,
+                productivities: { orderBy: { createdAt: "desc" } }
+            }
+        });
     }
 
     async delete(id: string): Promise<void> {

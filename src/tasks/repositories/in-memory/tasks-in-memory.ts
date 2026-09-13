@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { CreateTaskData } from "../../factories/task.factory.js";
 import { TasksRepository } from "../tasks.repository.js";
-import type { CreatedTask } from "../tasks.repository.js";
+import type { CreatedTask, TaskDetails } from "../tasks.repository.js";
 import { Task } from "../../../generated/prisma/client.js";
 
 export class TasksInMemory extends TasksRepository {
@@ -28,6 +28,12 @@ export class TasksInMemory extends TasksRepository {
 
     async findById(id: string): Promise<Task | null> {
         return this.items.find((task) => task.id === id) ?? null;
+    }
+
+    async findDetailsById(id: string): Promise<TaskDetails | null> {
+        const task = this.items.find((item) => item.id === id);
+
+        return task ? { ...task, productivities: [] } : null;
     }
 
     async delete(id: string): Promise<void> {
