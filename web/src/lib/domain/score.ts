@@ -15,6 +15,8 @@ export interface ScoreBand {
   dot: string;
   text: string;
   soft: string;
+  /** Fundo e borda usados pelos cards do ranking. */
+  card: string;
   /** So a borda ESQUERDA: o card continua branco com borda discreta. */
   borderLeft: string;
 }
@@ -29,6 +31,7 @@ export const SCORE_BANDS: readonly ScoreBand[] = [
     dot: 'bg-score-calm',
     text: 'text-score-calm-ink',
     soft: 'bg-score-calm-soft',
+    card: 'border-score-calm/25 bg-score-calm-soft',
     borderLeft: 'border-l-score-calm',
   },
   {
@@ -39,6 +42,7 @@ export const SCORE_BANDS: readonly ScoreBand[] = [
     dot: 'bg-score-low',
     text: 'text-score-low-ink',
     soft: 'bg-score-low-soft',
+    card: 'border-score-low/25 bg-score-low-soft',
     borderLeft: 'border-l-score-low',
   },
   {
@@ -49,6 +53,7 @@ export const SCORE_BANDS: readonly ScoreBand[] = [
     dot: 'bg-score-attention',
     text: 'text-score-attention-ink',
     soft: 'bg-score-attention-soft',
+    card: 'border-score-attention/25 bg-score-attention-soft',
     borderLeft: 'border-l-score-attention',
   },
   {
@@ -59,6 +64,7 @@ export const SCORE_BANDS: readonly ScoreBand[] = [
     dot: 'bg-score-high',
     text: 'text-score-high-ink',
     soft: 'bg-score-high-soft',
+    card: 'border-score-high/25 bg-score-high-soft',
     borderLeft: 'border-l-score-high',
   },
   {
@@ -69,6 +75,7 @@ export const SCORE_BANDS: readonly ScoreBand[] = [
     dot: 'bg-score-urgent',
     text: 'text-score-urgent-ink',
     soft: 'bg-score-urgent-soft',
+    card: 'border-score-urgent/40 bg-score-urgent-soft',
     borderLeft: 'border-l-score-urgent',
   },
 ] as const;

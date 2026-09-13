@@ -1,17 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Bricolage_Grotesque, Public_Sans } from 'next/font/google';
+import { Public_Sans } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
 
-/** Display: titulos de pagina e os numerais do score. Nada mais. */
-const bricolage = Bricolage_Grotesque({
-  subsets: ['latin', 'latin-ext'],
-  variable: '--font-bricolage',
-  display: 'swap',
-  weight: ['500', '600', '700'],
-});
-
-/** UI: todo o resto. */
+/** Fonte unica para uma interface coesa, legivel e orientada a trabalho. */
 const publicSans = Public_Sans({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-public-sans',
@@ -24,12 +16,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#f8faf9',
+  themeColor: '#f7f7f5',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="pt-BR" className={`${bricolage.variable} ${publicSans.variable}`}>
+    <html lang="pt-BR" className={publicSans.variable}>
       <body>
         <Providers>{children}</Providers>
       </body>

@@ -18,8 +18,8 @@ const PAIRS: ReadonlyArray<[string, string, string, number]> = [
   ['texto secundario sobre o fundo', 'ink-soft', 'background', 4.5],
   ['placeholder sobre branco', 'ink-faint', 'surface', 4.5],
   ['placeholder sobre o fundo', 'ink-faint', 'background', 4.5],
-  ['rotulo do botao primario', 'surface', 'brand-strong', 4.5],
-  ['rotulo do botao primario em hover', 'surface', 'brand-deep', 4.5],
+  ['rotulo do botao primario', 'on-brand', 'brand-strong', 4.5],
+  ['rotulo do botao primario em hover', 'on-brand', 'brand-deep', 4.5],
   ['marca como grafico sobre branco', 'brand', 'surface', 3],
   ['marca como grafico sobre o fundo', 'brand', 'background', 3],
   ['item de navegacao ativo', 'brand-strong', 'brand-subtle', 4.5],
@@ -32,7 +32,7 @@ const SCORE_BANDS = ['calm', 'low', 'attention', 'high', 'urgent'] as const;
 describe('contraste dos tokens', () => {
   it('extrai os tokens do globals.css', () => {
     expect(Object.keys(token).length).toBeGreaterThan(15);
-    expect(token['brand']).toBe('#16a34a');
+    expect(token['brand']).toBe('#2563eb');
   });
 
   it.each(PAIRS)('%s atinge o minimo', (_name, foreground, background, minimum) => {

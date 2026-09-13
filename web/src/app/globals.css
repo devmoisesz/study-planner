@@ -3,31 +3,38 @@
 /* =========================================================================
    Study Planner — tokens
    Fonte de verdade: front.md (raiz do repositorio).
-   Marca e score vivem em namespaces separados de proposito: o verde da
+   Marca e score vivem em namespaces separados de proposito: o azul da
    identidade (--color-brand) nunca representa prioridade, e o verde da
    faixa 20-39 (--color-score-low) nunca representa a marca.
    ========================================================================= */
 @theme {
   --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-public-sans), sans-serif;
+  --font-display: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
 
   /* Identidade.
-     #16a34a e a cor da marca, mas texto branco sobre ela da 3.30:1 e reprova
+     O azul e a cor da marca e concentra as acoes principais do produto.
      AA (4.5:1). Entao ela pinta o que e GRAFICO — logo, icone, anel de foco,
      item ativo — onde 3:1 basta; o preenchimento de botao usa brand-strong
      (5.02:1) e o hover usa brand-deep (7.13:1). Verificado por auditoria. */
-  --color-brand: #16a34a;
-  --color-brand-strong: #15803d;
-  --color-brand-deep: #166534;
-  --color-brand-subtle: #dcfce7;
+  --color-brand: #2563eb;
+  --color-brand-strong: #1d4ed8;
+  --color-brand-deep: #1e40af;
+  --color-brand-subtle: #e7f3ff;
+  --color-on-brand: #ffffff;
+
+  --color-sidebar: #f7f7f5;
+  --color-sidebar-surface: #ebebea;
+  --color-sidebar-line: #e9e9e7;
+  --color-sidebar-ink: #525252;
+  --color-sidebar-muted: #9b9a97;
 
   /* Superficies e texto */
-  --color-background: #f8faf9;
+  --color-background: #f7f7f5;
   --color-surface: #ffffff;
-  --color-line: #e6ebe8;
-  --color-ink: #10201a;
-  --color-ink-soft: #5a6b62;
-  --color-ink-faint: #667570;
+  --color-line: #e9e9e7;
+  --color-ink: #37352f;
+  --color-ink-soft: #6f6e69;
+  --color-ink-faint: #6f6e69;
 
   /* Feedback */
   --color-danger: #b91c1c;
@@ -51,9 +58,9 @@
   --color-score-high-ink: #c2410c;
   --color-score-high-soft: #fff7ed;
 
-  --color-score-urgent: #ef4444;
+  --color-score-urgent: #dc2626;
   --color-score-urgent-ink: #b91c1c;
-  --color-score-urgent-soft: #fef2f2;
+  --color-score-urgent-soft: #fee2e2;
 
   /* Escala tipografica — terca maior (1.25) sobre 16px */
   --text-2xs: 0.75rem;
@@ -74,13 +81,13 @@
   --text-3xl--line-height: 2.5rem;
 
   /* Raio em hierarquia — deliberadamente NAO uniforme */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
 
   /* Uma sombra so, quase imperceptivel */
-  --shadow-card: 0 1px 2px rgba(16, 32, 26, 0.04), 0 1px 3px rgba(16, 32, 26, 0.05);
-  --shadow-raised: 0 4px 16px rgba(16, 32, 26, 0.08), 0 1px 3px rgba(16, 32, 26, 0.05);
+  --shadow-card: 0 1px 2px rgba(55, 53, 47, 0.04);
+  --shadow-raised: 0 3px 8px rgba(55, 53, 47, 0.08), 0 1px 2px rgba(55, 53, 47, 0.04);
 
   /* Larguras de leitura */
   --spacing-sidebar: 15.5rem;
@@ -124,7 +131,7 @@
   }
 
   dialog::backdrop {
-    background-color: rgba(16, 32, 26, 0.32);
+    background-color: rgba(55, 53, 47, 0.2);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -194,7 +201,7 @@
     border-radius: 999px;
     background: var(--color-brand-strong);
     border: 2px solid var(--color-surface);
-    box-shadow: 0 1px 3px rgba(16, 32, 26, 0.25);
+    box-shadow: 0 1px 3px rgba(55, 53, 47, 0.18);
     transition: transform 120ms ease;
   }
 
@@ -204,7 +211,7 @@
     border-radius: 999px;
     background: var(--color-brand-strong);
     border: 2px solid var(--color-surface);
-    box-shadow: 0 1px 3px rgba(16, 32, 26, 0.25);
+    box-shadow: 0 1px 3px rgba(55, 53, 47, 0.18);
   }
 
   .range-slider:active::-webkit-slider-thumb {

@@ -41,7 +41,7 @@ export function MobileNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-surface px-4 md:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-sidebar-line bg-sidebar px-4 md:hidden">
         <Link href="/" aria-label="Study Planner — ir para Prioridades" className="rounded-md">
           <Logo />
         </Link>
@@ -51,7 +51,7 @@ export function MobileNav() {
           onClick={() => setOpenedAt(pathname)}
           aria-label="Abrir menu"
           aria-expanded={open}
-          className="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-background hover:text-ink"
+          className="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-sidebar-ink transition-colors hover:bg-sidebar-surface hover:text-ink"
         >
           <Menu aria-hidden className="size-5" />
         </button>
@@ -67,14 +67,14 @@ export function MobileNav() {
         aria-label="Menu principal"
         className="m-0 mr-auto h-dvh max-h-none w-72 max-w-[85vw] bg-transparent p-0 md:hidden"
       >
-        <div className="flex h-full flex-col bg-surface">
-          <div className="flex h-14 items-center justify-between border-b border-line px-4">
+        <div className="flex h-full flex-col bg-sidebar shadow-raised">
+          <div className="flex h-14 items-center justify-between border-b border-sidebar-line px-4">
             <Logo />
             <button
               type="button"
               onClick={close}
               aria-label="Fechar menu"
-              className="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-background hover:text-ink"
+              className="-mr-2 inline-flex size-10 items-center justify-center rounded-md text-sidebar-ink transition-colors hover:bg-sidebar-surface hover:text-ink"
             >
               <X aria-hidden className="size-5" />
             </button>

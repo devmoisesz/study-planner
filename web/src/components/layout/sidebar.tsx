@@ -9,7 +9,7 @@ import { NavLinks } from '@/components/layout/nav-links';
  */
 export function Sidebar() {
   return (
-    <div className="sticky top-0 hidden h-dvh shrink-0 border-r border-line bg-surface md:flex md:w-16 md:flex-col lg:w-sidebar">
+    <div className="sticky top-0 hidden h-dvh shrink-0 border-r border-sidebar-line bg-sidebar md:flex md:w-16 md:flex-col lg:w-sidebar">
       <div className="flex h-16 items-center justify-center px-3 lg:justify-start lg:px-5">
         <Link href="/" aria-label="Study Planner — ir para Prioridades" className="rounded-md">
           <Logo nameClassName="sr-only lg:not-sr-only" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, Ellipsis, Trash2, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Ellipsis, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,6 @@ interface TaskActionsProps {
   onDelete: () => void;
 }
 
-/**
- * Acoes do card. No mobile as secundarias vao para uma folha de acoes, em
- * vez de espremer quatro botoes lado a lado (front.md secao 23).
- * A folha reusa o <dialog>: nada de menu flutuante para manter acessivel.
- */
 export function TaskActions({
   taskId,
   taskTitle,
@@ -28,33 +23,23 @@ export function TaskActions({
 }: TaskActionsProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  function runFromSheet(action: () => void) {
-    setSheetOpen(false);
-    action();
-  }
-
   return (
     <>
-      {/* Ghost de proposito: o titulo e que abre a tarefa. Com seis cards na
-          tela, dois botoes com borda cada vira ruido e rouba o peso do score. */}
-      <div className="mt-3 -ml-2 flex items-center gap-1">
-        <Button size="sm" variant="ghost" onClick={onRegisterProductivity}>
-          Produtividade
-        </Button>
+      <div className="mt-4 flex items-end gap-1 border-t border-current/10 pt-3">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+          <Button size="sm" variant="ghost" onClick={onRegisterProductivity}>
+            Produtividade
+          </Button>
+
+          <Button size="sm" variant="ghost" onClick={onIncreasePriority}>
+            Aumentar prioridade
+          </Button>
+        </div>
 
         <Button
           size="sm"
           variant="ghost"
-          className="hidden sm:inline-flex"
-          onClick={onIncreasePriority}
-        >
-          Aumentar prioridade
-        </Button>
-
-        <Button
-          size="sm"
-          variant="ghost"
-          className="ml-auto size-8 px-0"
+          className="size-8 shrink-0 px-0"
           aria-label={`Mais ações para ${taskTitle}`}
           onClick={() => setSheetOpen(true)}
         >
@@ -80,16 +65,10 @@ export function TaskActions({
 
           <button
             type="button"
-            onClick={() => runFromSheet(onIncreasePriority)}
-            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-ink transition-colors hover:bg-background sm:hidden"
-          >
-            <TrendingUp aria-hidden className="size-4 shrink-0 text-ink-faint" />
-            Aumentar prioridade
-          </button>
-
-          <button
-            type="button"
-            onClick={() => runFromSheet(onDelete)}
+            onClick={() => {
+              setSheetOpen(false);
+              onDelete();
+            }}
             className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-danger transition-colors hover:bg-danger-soft"
           >
             <Trash2 aria-hidden className="size-4 shrink-0" />

@@ -27,8 +27,22 @@ const LABEL_LAYOUT: Record<NavVariant, string> = {
   drawer: '',
 };
 
+const LINK_TONE: Record<NavVariant, { active: string; inactive: string; icon: string }> = {
+  sidebar: {
+    active: 'bg-sidebar-surface text-ink',
+    inactive: 'text-sidebar-ink hover:bg-sidebar-surface hover:text-ink',
+    icon: 'text-sidebar-muted',
+  },
+  drawer: {
+    active: 'bg-sidebar-surface text-ink',
+    inactive: 'text-sidebar-ink hover:bg-sidebar-surface hover:text-ink',
+    icon: 'text-sidebar-muted',
+  },
+};
+
 export function NavLinks({ variant = 'sidebar', onNavigate }: NavLinksProps) {
   const pathname = usePathname();
+  const tone = LINK_TONE[variant];
 
   return (
     <ul className="flex flex-col gap-1">
@@ -46,14 +60,12 @@ export function NavLinks({ variant = 'sidebar', onNavigate }: NavLinksProps) {
               className={cn(
                 'flex items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors',
                 LINK_LAYOUT[variant],
-                active
-                  ? 'bg-brand-subtle text-brand-strong'
-                  : 'text-ink-soft hover:bg-background hover:text-ink',
+                active ? tone.active : tone.inactive,
               )}
             >
               <Icon
                 aria-hidden
-                className={cn('size-[18px] shrink-0', active ? 'text-brand' : 'text-ink-faint')}
+                className={cn('size-[18px] shrink-0', active ? 'text-sidebar-ink' : tone.icon)}
               />
               <span className={LABEL_LAYOUT[variant]}>{item.label}</span>
             </Link>

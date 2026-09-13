@@ -7,7 +7,7 @@ import { buttonClasses } from '@/components/ui/button';
 
 export default function PrioridadesPage() {
   return (
-    <ContentContainer>
+    <ContentContainer wide>
       <PageHeader
         title="Prioridades"
         description="Veja o que merece mais atenção agora."

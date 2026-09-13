@@ -8,12 +8,21 @@ import { cn } from '@/lib/utils/cn';
 export function ContentContainer({
   children,
   className,
+  wide = false,
 }: {
   children: ReactNode;
   className?: string;
+  /** A grade pode ocupar mais espaco sem alargar formularios. */
+  wide?: boolean;
 }) {
   return (
-    <div className={cn('mx-auto w-full max-w-content px-5 py-8 lg:px-8 lg:py-12', className)}>
+    <div
+      className={cn(
+        'mx-auto w-full px-5 py-8 lg:px-8 lg:py-12',
+        wide ? 'max-w-[90rem]' : 'max-w-content',
+        className,
+      )}
+    >
       {children}
     </div>
   );

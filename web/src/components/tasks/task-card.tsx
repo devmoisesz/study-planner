@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { LibraryBig } from 'lucide-react';
 import { PriorityBadge, PriorityRail, ScoreNumber } from '@/components/tasks/score-display';
 import { TaskActions } from '@/components/tasks/task-actions';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@/components/tasks/task-dialogs';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils/cn';
+import { scoreBand } from '@/lib/domain/score';
 import type { RankedTask } from '@/types/api';
 
 type OpenDialog = 'productivity' | 'priority' | 'delete' | null;
@@ -35,51 +37,53 @@ export function TaskCard({
 }: TaskCardProps) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const close = () => setDialog(null);
+  const band = scoreBand(task.score);
 
   return (
-    <Card className={cn('relative overflow-hidden', isHighlighted && 'settle-highlight')}>
+    <Card
+      className={cn(
+        'relative flex min-h-72 flex-col overflow-hidden border shadow-card transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-raised',
+        band.card,
+        isHighlighted && 'settle-highlight',
+      )}
+    >
       <PriorityRail score={task.score} />
 
-      <div className="py-4 pl-5 pr-4 sm:pl-6">
-        <div className="flex gap-4">
-          <div className="w-11 shrink-0 pt-0.5">
-            <ScoreNumber score={task.score} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            {/* flex-wrap + sm:ml-auto: no desktop o badge vai para a direita,
-                no mobile ele cai para a linha de baixo, sem duplicar no DOM. */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <h3 className="min-w-0 text-base font-semibold leading-snug text-ink">
-                <Link
-                  href={`/tarefas/${task.id}`}
-                  className="rounded-sm transition-colors hover:text-brand-strong"
-                >
-                  {task.title}
-                </Link>
-              </h3>
-              <PriorityBadge score={task.score} className="sm:ml-auto" />
-            </div>
-
-            {task.description ? (
-              <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{task.description}</p>
-            ) : null}
-
-            {task.resourceCount > 0 ? (
-              <p className="mt-2 text-xs text-ink-faint">
-                {task.resourceCount === 1 ? '1 recurso' : `${task.resourceCount} recursos`}
-              </p>
-            ) : null}
-
-            <TaskActions
-              taskId={task.id}
-              taskTitle={task.title}
-              onRegisterProductivity={() => setDialog('productivity')}
-              onIncreasePriority={() => setDialog('priority')}
-              onDelete={() => setDialog('delete')}
-            />
-          </div>
+      <div className="flex min-h-72 flex-col p-5 pt-6">
+        <div className="flex items-start justify-between gap-3">
+          <ScoreNumber score={task.score} size="lg" />
+          <PriorityBadge score={task.score} />
         </div>
+
+        <div className="mt-6 min-w-0 flex-1">
+          <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-ink">
+            <Link
+              href={`/tarefas/${task.id}`}
+              className="rounded-sm transition-colors hover:text-brand-strong"
+            >
+              {task.title}
+            </Link>
+          </h3>
+
+          {task.description ? (
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">{task.description}</p>
+          ) : null}
+        </div>
+
+        {task.resourceCount > 0 ? (
+          <p className={cn('mt-5 flex items-center gap-1.5 text-xs font-medium', band.text)}>
+            <LibraryBig aria-hidden className="size-3.5" />
+            {task.resourceCount === 1 ? '1 recurso' : `${task.resourceCount} recursos`}
+          </p>
+        ) : null}
+
+        <TaskActions
+          taskId={task.id}
+          taskTitle={task.title}
+          onRegisterProductivity={() => setDialog('productivity')}
+          onIncreasePriority={() => setDialog('priority')}
+          onDelete={() => setDialog('delete')}
+        />
       </div>
 
       {/* Montados so quando abertos: cada abertura comeca com estado limpo. */}

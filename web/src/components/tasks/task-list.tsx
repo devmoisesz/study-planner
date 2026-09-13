@@ -25,9 +25,9 @@ export function TaskList({
   highlightedTaskId,
 }: TaskListProps) {
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {tasks.map((task) => (
-        <li key={task.id}>
+        <li key={task.id} className="min-w-0">
           <TaskCard
             task={task}
             isPending={pendingTaskId === task.id}

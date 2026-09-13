@@ -53,14 +53,14 @@ export function PriorityBadge({ score, className }: { score: number; className?:
   );
 }
 
-/** Trilho vertical colorido na borda esquerda do card. */
+/** Detalhe cromático no topo; o fundo do card também segue a prioridade. */
 export function PriorityRail({ score }: { score: number }) {
   const band = scoreBand(score);
 
   return (
     <span
       aria-hidden
-      className={cn('absolute inset-y-0 left-0 w-1 rounded-l-lg', band.dot)}
+      className={cn('absolute inset-x-0 top-0 h-1', band.dot)}
     />
   );
 }
