@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../database/prisma.service.js";
-import { Productivity, Task } from "../../../generated/prisma/client.js";
+import { Productivity } from "../../../generated/prisma/client.js";
 import { InputProductivity, ProductivityRepository } from "../productivity.repository.js";
 
 @Injectable()

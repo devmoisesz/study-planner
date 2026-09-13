@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { TasksInMemory } from "../repositories/in-memory/tasks-in-memory.js";
-import { CreateTaskService } from "./create-task.service.js";
 import { LogProductivityService } from "./log-productivity.service.js";
 import { ProductivityInMemory } from "../repositories/in-memory/productivity-in-memory.js";
 

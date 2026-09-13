@@ -1,8 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { CreateTaskData } from "../../factories/task.factory.js";
-import { TasksRepository } from "../tasks.repository.js";
-import type { CreatedTask } from "../tasks.repository.js";
-import { Productivity, Task } from "../../../generated/prisma/client.js";
+import { Productivity } from "../../../generated/prisma/client.js";
 import { InputProductivity, ProductivityRepository } from "../productivity.repository.js";
 
 export class ProductivityInMemory extends ProductivityRepository {
