@@ -1,0 +1,218 @@
+@import 'tailwindcss';
+
+/* =========================================================================
+   Study Planner — tokens
+   Fonte de verdade: front.md (raiz do repositorio).
+   Marca e score vivem em namespaces separados de proposito: o verde da
+   identidade (--color-brand) nunca representa prioridade, e o verde da
+   faixa 20-39 (--color-score-low) nunca representa a marca.
+   ========================================================================= */
+@theme {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-public-sans), sans-serif;
+
+  /* Identidade.
+     #16a34a e a cor da marca, mas texto branco sobre ela da 3.30:1 e reprova
+     AA (4.5:1). Entao ela pinta o que e GRAFICO — logo, icone, anel de foco,
+     item ativo — onde 3:1 basta; o preenchimento de botao usa brand-strong
+     (5.02:1) e o hover usa brand-deep (7.13:1). Verificado por auditoria. */
+  --color-brand: #16a34a;
+  --color-brand-strong: #15803d;
+  --color-brand-deep: #166534;
+  --color-brand-subtle: #dcfce7;
+
+  /* Superficies e texto */
+  --color-background: #f8faf9;
+  --color-surface: #ffffff;
+  --color-line: #e6ebe8;
+  --color-ink: #10201a;
+  --color-ink-soft: #5a6b62;
+  --color-ink-faint: #667570;
+
+  /* Feedback */
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+
+  /* Prioridade — o 500 pinta bolinha/barra; o -ink pinta texto (AA em
+     superficie branca); o -soft pinta o fundo levissimo do badge. */
+  --color-score-calm: #3b82f6;
+  --color-score-calm-ink: #1d4ed8;
+  --color-score-calm-soft: #eff6ff;
+
+  --color-score-low: #22c55e;
+  --color-score-low-ink: #15803d;
+  --color-score-low-soft: #f0fdf4;
+
+  --color-score-attention: #eab308;
+  --color-score-attention-ink: #a16207;
+  --color-score-attention-soft: #fefce8;
+
+  --color-score-high: #f97316;
+  --color-score-high-ink: #c2410c;
+  --color-score-high-soft: #fff7ed;
+
+  --color-score-urgent: #ef4444;
+  --color-score-urgent-ink: #b91c1c;
+  --color-score-urgent-soft: #fef2f2;
+
+  /* Escala tipografica — terca maior (1.25) sobre 16px */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 1.875rem;
+  --text-2xl--line-height: 2.125rem;
+  --text-3xl: 2.375rem;
+  --text-3xl--line-height: 2.5rem;
+
+  /* Raio em hierarquia — deliberadamente NAO uniforme */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+
+  /* Uma sombra so, quase imperceptivel */
+  --shadow-card: 0 1px 2px rgba(16, 32, 26, 0.04), 0 1px 3px rgba(16, 32, 26, 0.05);
+  --shadow-raised: 0 4px 16px rgba(16, 32, 26, 0.08), 0 1px 3px rgba(16, 32, 26, 0.05);
+
+  /* Larguras de leitura */
+  --spacing-sidebar: 15.5rem;
+  --spacing-content: 48rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Foco visivel e consistente em tudo que recebe teclado. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Campo reprovado nao pode exibir anel verde: o foco acompanha o erro. */
+  [aria-invalid='true']:focus-visible {
+    outline-color: var(--color-danger);
+  }
+
+  ::selection {
+    background-color: var(--color-brand-subtle);
+    color: var(--color-brand-strong);
+  }
+
+  /* Numerais de score sempre alinhados verticalmente na lista. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  dialog::backdrop {
+    background-color: rgba(16, 32, 26, 0.32);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Unico momento de motion nao disparado por hover.
+   *
+   * Quando o score muda, o card salta de posicao no ranking — e facil perder
+   * de vista para onde ele foi. Em vez de tentar animar a reordenacao (que
+   * exigiria FLIP e nao funciona com reflow de flex), destacamos por um
+   * instante o card que mudou, onde quer que ele tenha parado.
+   * `prefers-reduced-motion` neutraliza isso na camada base.
+   */
+  @keyframes settle-highlight {
+    from {
+      box-shadow: 0 0 0 3px var(--color-brand-subtle);
+    }
+    to {
+      box-shadow: 0 0 0 3px transparent;
+    }
+  }
+
+  .settle-highlight {
+    animation: settle-highlight 1.2s ease-out;
+  }
+
+  /* input[type=range] nao aceita estilo por pseudo-elemento via utilitario,
+     entao o slider mora aqui. Acessivel de graca: teclado, aria, leitor. */
+  .range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 1.5rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .range-slider::-webkit-slider-runnable-track {
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--color-line);
+  }
+
+  .range-slider::-moz-range-track {
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--color-line);
+  }
+
+  .range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -0.3125rem;
+    height: 1rem;
+    width: 1rem;
+    border-radius: 999px;
+    background: var(--color-brand-strong);
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 1px 3px rgba(16, 32, 26, 0.25);
+    transition: transform 120ms ease;
+  }
+
+  .range-slider::-moz-range-thumb {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 999px;
+    background: var(--color-brand-strong);
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 1px 3px rgba(16, 32, 26, 0.25);
+  }
+
+  .range-slider:active::-webkit-slider-thumb {
+    transform: scale(1.15);
+  }
+
+  .range-slider:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
