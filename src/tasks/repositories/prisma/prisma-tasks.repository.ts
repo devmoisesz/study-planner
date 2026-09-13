@@ -3,6 +3,7 @@ import { PrismaService } from "../../../database/prisma.service.js";
 import type { CreateTaskData } from "../../factories/task.factory.js";
 import { TasksRepository } from "../tasks.repository.js";
 import type { TaskDetails } from "../tasks.repository.js";
+import type { UpdateTaskData } from "../tasks.repository.js";
 import { Task } from "../../../generated/prisma/client.js";
 
 @Injectable()
@@ -56,6 +57,10 @@ export class PrismaTasksRepository extends TasksRepository {
     async delete(id: string): Promise<void> {
         // Resources e productivities saem junto: onDelete Cascade no schema.
         await this.prisma.task.delete({ where: { id } });
+    }
+
+    async update(id: string, data: UpdateTaskData): Promise<Task> {
+        return this.prisma.task.update({ where: { id }, data });
     }
 
     async create(data: CreateTaskData) {

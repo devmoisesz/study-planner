@@ -14,9 +14,11 @@ import { LogProductivityService } from "./services/log-productivity.service.js";
 import { LogProductivityController } from "./controllers/log-productivity.controller.js";
 import { GetTaskController } from "./controllers/get-task.controller.js";
 import { GetTaskService } from "./services/get-task.service.js";
+import { UpdateTaskController } from "./controllers/update-task.controller.js";
+import { UpdateTaskService } from "./services/update-task.service.js";
 
 @Module({
-    controllers: [CreateTaskController, ListTasksController, DeleteTaskController, LogProductivityController, GetTaskController],
+    controllers: [CreateTaskController, ListTasksController, DeleteTaskController, LogProductivityController, GetTaskController, UpdateTaskController],
     imports: [DatabaseModule],
     providers: [
         CreateTaskService,
@@ -24,6 +26,7 @@ import { GetTaskService } from "./services/get-task.service.js";
         DeleteTaskService,
         LogProductivityService,
         GetTaskService,
+        UpdateTaskService,
         PrismaTasksRepository,
         PrismaProductivityRepository,
         {
