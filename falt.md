@@ -213,4 +213,3 @@ compromissos.
 5. **Dívidas de configuração** — são minutos cada e param de atrapalhar
 6. **Testes de componente** dos 5 arquivos listados na seção 4
 7. **Suíte e2e** versionada
-8. **`POST /resources/upload`** — por último: depende de escolher armazenamento
