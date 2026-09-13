@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Task, TaskWithResources } from '@/types/api';
+import type { RankedTask, ResourceWithTask } from '@/types/api';
 import {
-  createTask,
   deleteTask,
   getTask,
   increasePriority,
@@ -11,7 +10,7 @@ import {
   updateTask,
 } from './tasks';
 
-/** localStorage minimo em memoria — o ambiente de teste e node. */
+/** localStorage minimo em memoria — o ambiente deste projeto e node. */
 function installLocalStorage() {
   const data = new Map<string, string>();
 
@@ -24,31 +23,87 @@ function installLocalStorage() {
   vi.stubGlobal('window', { localStorage: globalThis.localStorage });
 }
 
-const task = (id: string, title: string, score: number): Task => ({
+const task = (id: string, title: string, score: number, resourceCount = 0): RankedTask => ({
   id,
   title,
   description: null,
   score,
+  resourceCount,
   createdAt: '2026-09-13T00:00:00.000Z',
   updatedAt: '2026-09-13T00:00:00.000Z',
 });
 
-const BACKEND_TASKS: Task[] = [
-  task('alta', 'Trabalho da ETEC', 81),
-  task('media', 'Simulado Fatec', 52),
-  task('baixa', 'Revisar Guerra Fria', 31),
-];
+let backendTasks: RankedTask[];
+let backendResources: ResourceWithTask[];
+let requests: { url: string; method: string }[];
 
-function stubFetch(tasks: Task[] = BACKEND_TASKS) {
+/** Encena as tres rotas reais que o backend expoe. */
+function stubApi() {
+  requests = [];
+
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => new Response(JSON.stringify(tasks), { status: 200 })),
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const method = init?.method ?? 'GET';
+      requests.push({ url, method });
+
+      if (method === 'DELETE') {
+        const id = url.split('/').pop();
+        backendTasks = backendTasks.filter((item) => item.id !== id);
+        // Cascade no banco: os recursos da tarefa saem junto.
+        backendResources = backendResources.filter((item) => item.taskId !== id);
+        return new Response(null, { status: 204 });
+      }
+
+      if (url.endsWith('/resources')) {
+        return new Response(JSON.stringify(backendResources), { status: 200 });
+      }
+
+      return new Response(JSON.stringify(backendTasks), { status: 200 });
+    }),
   );
 }
 
 beforeEach(() => {
   installLocalStorage();
-  stubFetch();
+  backendTasks = [
+    task('alta', 'Trabalho da ETEC', 81, 2),
+    task('media', 'Simulado Fatec', 52),
+    task('baixa', 'Revisar Guerra Fria', 31, 1),
+  ];
+  backendResources = [
+    {
+      id: 'r1',
+      title: 'Slides de modelagem',
+      type: 'PDF',
+      url: 'https://example.com/slides.pdf',
+      description: null,
+      taskId: 'alta',
+      createdAt: '2026-09-13T00:00:00.000Z',
+      taskTitle: 'Trabalho da ETEC',
+    },
+    {
+      id: 'r2',
+      title: 'Documentação do PostgreSQL',
+      type: 'WEBSITE',
+      url: 'https://postgresql.org/docs',
+      description: null,
+      taskId: 'alta',
+      createdAt: '2026-09-13T00:00:00.000Z',
+      taskTitle: 'Trabalho da ETEC',
+    },
+    {
+      id: 'r3',
+      title: 'Capítulo 14',
+      type: 'BOOK',
+      url: null,
+      description: 'Páginas 212 a 240',
+      taskId: 'baixa',
+      createdAt: '2026-09-13T00:00:00.000Z',
+      taskTitle: 'Revisar Guerra Fria',
+    },
+  ];
+  stubApi();
 });
 
 afterEach(() => {
@@ -57,24 +112,64 @@ afterEach(() => {
 
 describe('listTasks', () => {
   it('devolve as tarefas reais ordenadas por score desc', async () => {
-    const tasks = await listTasks();
-    expect(tasks.map((item) => item.id)).toEqual(['alta', 'media', 'baixa']);
+    expect((await listTasks()).map((item) => item.id)).toEqual(['alta', 'media', 'baixa']);
   });
 
-  it('comeca com contagem de recursos zerada (o list nao traz resources)', async () => {
+  it('usa o resourceCount que VEM DA API, sem contar nada localmente', async () => {
     const tasks = await listTasks();
-    expect(tasks.every((item) => item.resourceCount === 0)).toBe(true);
+
+    expect(tasks.map((item) => item.resourceCount)).toEqual([2, 0, 1]);
+    expect(requests).toEqual([{ url: '/api/tasks/list', method: 'GET' }]);
   });
 });
 
-describe('overlay sobre a resposta real', () => {
-  it('remove do ranking a tarefa excluida', async () => {
+describe('deleteTask', () => {
+  it('chama DELETE na API em vez de esconder localmente', async () => {
     await deleteTask('media');
 
-    const tasks = await listTasks();
-    expect(tasks.map((item) => item.id)).toEqual(['alta', 'baixa']);
+    expect(requests).toContainEqual({ url: '/api/tasks/media', method: 'DELETE' });
   });
 
+  it('a tarefa some do ranking porque o servidor deixou de devolve-la', async () => {
+    await deleteTask('media');
+
+    expect((await listTasks()).map((item) => item.id)).toEqual(['alta', 'baixa']);
+  });
+
+  it('leva os recursos junto, como o cascade do banco', async () => {
+    await deleteTask('alta');
+
+    expect((await listResources()).map((item) => item.id)).toEqual(['r3']);
+  });
+});
+
+describe('listResources', () => {
+  it('vem da API com o titulo da tarefa de origem', async () => {
+    const resources = await listResources();
+
+    expect(requests).toContainEqual({ url: '/api/resources', method: 'GET' });
+    expect(resources).toHaveLength(3);
+    expect(resources[0]).toMatchObject({
+      title: 'Slides de modelagem',
+      taskTitle: 'Trabalho da ETEC',
+    });
+  });
+});
+
+describe('getTask', () => {
+  it('junta a tarefa do list com os recursos reais filtrados por id', async () => {
+    const detail = await getTask('alta');
+
+    expect(detail.title).toBe('Trabalho da ETEC');
+    expect(detail.resources.map((item) => item.id)).toEqual(['r1', 'r2']);
+  });
+
+  it('falha de forma explicita quando a tarefa nao existe', async () => {
+    await expect(getTask('inexistente')).rejects.toThrow('Tarefa não encontrada.');
+  });
+});
+
+describe('overlay do que ainda nao tem rota', () => {
   it('aplica a edicao de titulo e descricao', async () => {
     await updateTask('alta', { title: 'Trabalho da ETEC — banco de dados', description: 'Modelagem' });
 
@@ -86,16 +181,14 @@ describe('overlay sobre a resposta real', () => {
   it('limpa a descricao quando o texto fica em branco', async () => {
     await updateTask('alta', { title: 'Trabalho da ETEC', description: '   ' });
 
-    const [first] = await listTasks();
-    expect(first?.description).toBeNull();
+    expect((await listTasks())[0]?.description).toBeNull();
   });
 });
 
 describe('registerProductivity', () => {
   it('reduz o score pela formula do plan.md', async () => {
-    const next = await registerProductivity('alta', 55);
     // 81 x (1 - 0.55) = 36.45 -> 36
-    expect(next).toBe(36);
+    expect(await registerProductivity('alta', 55)).toBe(36);
   });
 
   it('REORDENA o ranking, porque a ordem do backend deixou de valer', async () => {
@@ -111,69 +204,19 @@ describe('registerProductivity', () => {
     await registerProductivity('alta', 20);
 
     const detail = await getTask('alta');
-    expect(detail.productivities).toHaveLength(2);
-    expect(detail.productivities.map((item) => item.percentage)).toContain(40);
+    expect(detail.productivities.map((item) => item.percentage)).toEqual(
+      expect.arrayContaining([40, 20]),
+    );
   });
 });
 
 describe('increasePriority', () => {
   it('aumenta o score pela formula do plan.md', async () => {
-    const next = await increasePriority('baixa', 50);
     // 31 x 1.5 = 46.5 -> 47
-    expect(next).toBe(47);
+    expect(await increasePriority('baixa', 50)).toBe(47);
   });
 
   it('nunca passa de 100', async () => {
     expect(await increasePriority('alta', 90)).toBe(100);
-  });
-});
-
-describe('createTask', () => {
-  const created: TaskWithResources = {
-    ...task('nova', 'Estudar Trigonometria', 82),
-    resources: [
-      {
-        id: 'r1',
-        title: 'Aula de Trigonometria',
-        type: 'YOUTUBE',
-        url: 'https://youtube.com/aula',
-        description: null,
-        taskId: 'nova',
-        createdAt: '2026-09-13T00:00:00.000Z',
-      },
-    ],
-  };
-
-  it('guarda os recursos REAIS devolvidos pelo POST para o list poder conta-los', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify(created), { status: 201 })),
-    );
-
-    await createTask({
-      title: 'Estudar Trigonometria',
-      importance: 9,
-      domain: 3,
-      urgency: 8,
-      relevance: 9,
-    });
-
-    stubFetch([...BACKEND_TASKS, task('nova', 'Estudar Trigonometria', 82)]);
-
-    const tasks = await listTasks();
-    expect(tasks.find((item) => item.id === 'nova')?.resourceCount).toBe(1);
-
-    const resources = await listResources();
-    expect(resources).toHaveLength(1);
-    expect(resources[0]).toMatchObject({
-      title: 'Aula de Trigonometria',
-      taskTitle: 'Estudar Trigonometria',
-    });
-  });
-});
-
-describe('getTask', () => {
-  it('falha de forma explicita quando a tarefa nao existe', async () => {
-    await expect(getTask('inexistente')).rejects.toThrow('Tarefa não encontrada.');
   });
 });

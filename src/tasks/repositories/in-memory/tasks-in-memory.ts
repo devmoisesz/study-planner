@@ -1,16 +1,27 @@
 import { randomUUID } from "node:crypto";
 import type { CreateTaskData } from "../../factories/task.factory.js";
 import { TasksRepository } from "../tasks.repository.js";
-import type { CreatedTask } from "../tasks.repository.js";
+import type { CreatedTask, RankedTask } from "../tasks.repository.js";
 import { Task } from "../../../generated/prisma/client.js";
 
 export class TasksInMemory extends TasksRepository {
     public items: CreatedTask[] = [];
 
-    async listTasks(): Promise<Task[]> {
-        return [...this.items].sort((firstTask, secondTask) =>
-            secondTask.score - firstTask.score
-        );
+    async listTasks(): Promise<RankedTask[]> {
+        return [...this.items]
+            .sort((firstTask, secondTask) => secondTask.score - firstTask.score)
+            .map(({ resources, ...task }) => ({
+                ...task,
+                resourceCount: resources.length
+            }));
+    }
+
+    async findById(id: string): Promise<Task | null> {
+        return this.items.find((task) => task.id === id) ?? null;
+    }
+
+    async delete(id: string): Promise<void> {
+        this.items = this.items.filter((task) => task.id !== id);
     }
 
     async create(data: CreateTaskData): Promise<CreatedTask> {

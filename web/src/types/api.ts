@@ -32,9 +32,14 @@ export interface TaskWithResources extends Task {
   resources: Resource[];
 }
 
-/** Task enriquecida para a UI. `resourceCount` nao vem do GET /tasks/list. */
+/** Formato devolvido por GET /tasks/list: conta os recursos sem carrega-los. */
 export interface RankedTask extends Task {
   resourceCount: number;
+}
+
+/** Formato devolvido por GET /resources. */
+export interface ResourceWithTask extends Resource {
+  taskTitle: string;
 }
 
 export interface CreateResourceInput {

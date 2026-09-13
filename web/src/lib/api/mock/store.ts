@@ -1,19 +1,19 @@
 /**
- * OVERLAY LOCAL — camada temporaria.
+ * OVERLAY LOCAL — camada temporaria, no localStorage do navegador.
  *
- * O backend hoje so expoe POST /tasks e GET /tasks/list. Tudo que as telas
- * de detalhe, recursos e acoes precisam alem disso mora aqui, no
- * localStorage do navegador.
+ * Encolheu: recursos, contagem de recursos e exclusao agora vem da API real
+ * (GET /resources, _count no list, DELETE /tasks/:id). Restam so as tres
+ * coisas cujas rotas ainda nao existem:
  *
- * Os dados NAO sao inventados: os `resources` gravados aqui sao exatamente
- * os que o POST /tasks real devolveu. O que e local e a LEITURA deles,
- * porque o GET /tasks/list nao faz include.
+ *   scores         -> POST /tasks/:id/productivities e /priority-boost
+ *   edits          -> PATCH /tasks/:id
+ *   productivities -> POST /tasks/:id/productivities
  *
- * Para remover esta camada: apagar a pasta mock/ e preencher os corpos
- * marcados com TODO(api) em ../tasks.ts. Nenhuma tela muda.
+ * Para remover: implementar essas rotas, preencher os corpos marcados com
+ * TODO(api) em ../tasks.ts e apagar esta pasta. Nenhuma tela muda.
  */
 
-import type { Productivity, Resource } from '@/types/api';
+import type { Productivity } from '@/types/api';
 
 const STORAGE_KEY = 'study-planner:overlay:v1';
 
@@ -24,24 +24,14 @@ export interface TaskEdit {
 
 export interface Overlay {
   version: 1;
-  /** Recursos por task, vindos da resposta real do POST /tasks. */
-  resources: Record<string, Resource[]>;
   /** Score depois de produtividade ou aumento manual. */
   scores: Record<string, number>;
   edits: Record<string, TaskEdit>;
-  deletedIds: string[];
   productivities: Record<string, Productivity[]>;
 }
 
 function emptyOverlay(): Overlay {
-  return {
-    version: 1,
-    resources: {},
-    scores: {},
-    edits: {},
-    deletedIds: [],
-    productivities: {},
-  };
+  return { version: 1, scores: {}, edits: {}, productivities: {} };
 }
 
 export function readOverlay(): Overlay {
@@ -71,22 +61,10 @@ function writeOverlay(overlay: Overlay): void {
   }
 }
 
-function mutate(change: (overlay: Overlay) => void): Overlay {
+function mutate(change: (overlay: Overlay) => void): void {
   const overlay = readOverlay();
   change(overlay);
   writeOverlay(overlay);
-  return overlay;
-}
-
-export function rememberResources(taskId: string, resources: Resource[]): void {
-  if (resources.length === 0) return;
-  mutate((overlay) => {
-    overlay.resources[taskId] = resources;
-  });
-}
-
-export function resourcesOf(taskId: string, overlay = readOverlay()): Resource[] {
-  return overlay.resources[taskId] ?? [];
 }
 
 export function rememberScore(taskId: string, score: number): void {
@@ -98,16 +76,6 @@ export function rememberScore(taskId: string, score: number): void {
 export function rememberEdit(taskId: string, edit: TaskEdit): void {
   mutate((overlay) => {
     overlay.edits[taskId] = { ...overlay.edits[taskId], ...edit };
-  });
-}
-
-export function rememberDeletion(taskId: string): void {
-  mutate((overlay) => {
-    if (!overlay.deletedIds.includes(taskId)) overlay.deletedIds.push(taskId);
-    delete overlay.resources[taskId];
-    delete overlay.scores[taskId];
-    delete overlay.edits[taskId];
-    delete overlay.productivities[taskId];
   });
 }
 

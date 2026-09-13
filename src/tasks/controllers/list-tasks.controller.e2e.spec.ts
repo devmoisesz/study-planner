@@ -26,7 +26,16 @@ describe("List Tasks (E2E)", () => {
                 data: { title: "E2E - Prioridade baixa", score: 20 }
             }),
             prisma.task.create({
-                data: { title: "E2E - Prioridade alta", score: 90 }
+                data: {
+                    title: "E2E - Prioridade alta",
+                    score: 90,
+                    resources: {
+                        create: [
+                            { title: "E2E - Material 1", type: "WEBSITE" },
+                            { title: "E2E - Material 2", type: "PDF" }
+                        ]
+                    }
+                }
             }),
             prisma.task.create({
                 data: { title: "E2E - Prioridade média", score: 50 }
@@ -55,16 +64,22 @@ describe("List Tasks (E2E)", () => {
         expect(createdTasks).toEqual([
             expect.objectContaining({
                 title: "E2E - Prioridade alta",
-                score: 90
+                score: 90,
+                resourceCount: 2
             }),
             expect.objectContaining({
                 title: "E2E - Prioridade média",
-                score: 50
+                score: 50,
+                resourceCount: 0
             }),
             expect.objectContaining({
                 title: "E2E - Prioridade baixa",
-                score: 20
+                score: 20,
+                resourceCount: 0
             })
         ]);
+
+        // O list conta os recursos sem carregar nenhum deles no payload.
+        expect(createdTasks[0]).not.toHaveProperty("resources");
     });
 });
