@@ -55,8 +55,6 @@ describe("List Tasks (E2E)", () => {
     test("[GET] /tasks/list", async () => {
         const response = await request(app.getHttpServer()).get("/tasks/list");
 
-        console.log(JSON.stringify(response.body, null, 2))
-
         expect(response.statusCode).toBe(200);
     });
 });
