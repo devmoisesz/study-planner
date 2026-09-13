@@ -1,0 +1,16 @@
+.git
+.github
+.agents
+.claude
+node_modules
+dist
+generated
+data
+coverage
+.env
+.env.*
+web
+README.md
+falt.md
+front.md
+plan.md

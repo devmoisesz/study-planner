@@ -8,6 +8,7 @@ import type { NextConfig } from 'next';
 const API_ORIGIN = process.env.ORDO_API_ORIGIN ?? 'http://localhost:3000';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${API_ORIGIN}/:path*` }];
   },

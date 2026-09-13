@@ -1,13 +1,57 @@
 services:
-  portgres:
-    container_name: study-planner
-    image: postgres:17
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRESQL_USERNAME:-study_planner}
+      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD:-study_planner}
+      POSTGRES_DB: ${POSTGRESQL_DATABASE:-study_planner}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      POSTGRES_USER: ${POSTGRESQL_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD}
-      POSTGRES_DB: ${POSTGRESQL_DATABASE}
-      PGDATA: /data/postgres
-    volumes:
-      - ./data/pg:/data/postgres
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRESQL_USERNAME:-study_planner}:${POSTGRESQL_PASSWORD:-study_planner}@postgres:5432/${POSTGRESQL_DATABASE:-study_planner}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('net').connect(3000, '127.0.0.1').on('connect', () => process.exit(0)).on('error', () => process.exit(1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        ORDO_API_ORIGIN: http://api:3000
+    environment:
+      PORT: 3333
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
