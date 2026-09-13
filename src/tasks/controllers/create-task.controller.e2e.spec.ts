@@ -55,8 +55,6 @@ describe('Create Task (E2E)', () => {
         ],
       });
 
-      console.log(JSON.stringify(response.body, null, 2))
-
     expect(response.statusCode).toBe(201);
 
     expect(response.body).toMatchObject({

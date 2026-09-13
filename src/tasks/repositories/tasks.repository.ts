@@ -5,4 +5,5 @@ export type CreatedTask = Task & { resources: Resource[] };
 
 export abstract class TasksRepository {
     abstract create(data: CreateTaskData): Promise<CreatedTask>;
+    abstract listTasks(): Promise<Task[]>;
 }
