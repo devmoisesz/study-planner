@@ -10,6 +10,18 @@ export class PrismaTasksRepository extends TasksRepository {
         super();
     }
 
+    async changeScore(id: string, newScore: number): Promise<void> {
+        await this.prisma.task.update({
+            where: {
+                id
+            },
+            data: {
+                score: newScore
+            }
+        })
+    }
+    
+
     async listTasks(): Promise<Task[]> {
         return await this.prisma.task.findMany({
             orderBy: {

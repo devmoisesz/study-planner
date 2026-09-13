@@ -8,4 +8,5 @@ export abstract class TasksRepository {
     abstract listTasks(): Promise<Task[]>;
     abstract findById(id: string): Promise<Task | null>;
     abstract delete(id: string): Promise<void>;
+    abstract changeScore(id: string, newScore: number): Promise<void | null>;
 }

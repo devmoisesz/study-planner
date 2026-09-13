@@ -209,7 +209,5 @@ compromissos.
    das rotas que faltam que muda a experiência de verdade
 2. **`PATCH`** e **`GET /tasks/:id`** — fecham a tela de Detalhes
 3. **`POST /tasks/:id/priority-boost`** — completa o par de ações sobre o score
-4. **Apagar `web/src/lib/api/mock/`** — o `localStorage` sai de cena
 5. **Dívidas de configuração** — são minutos cada e param de atrapalhar
 6. **Testes de componente** dos 5 arquivos listados na seção 4
-7. **Suíte e2e** versionada
