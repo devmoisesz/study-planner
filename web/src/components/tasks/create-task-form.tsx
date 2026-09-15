@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { CriterionField } from '@/components/tasks/criterion-field';
 import { ResourceFields } from '@/components/tasks/resource-fields';
@@ -23,6 +23,10 @@ import {
 import type { CreateTaskFormValues } from '@/lib/domain/create-task-schema';
 import { queryKeys } from '@/lib/query/keys';
 import { scoreBand } from '@/lib/domain/score';
+import {
+  createTaskPlaceholders,
+  type TaskPlaceholders,
+} from '@/lib/domain/task-placeholders';
 
 /** Perguntas do front.md secao 11, na ordem em que a tela as apresenta. */
 const CRITERIA = [
@@ -64,6 +68,17 @@ export function CreateTaskForm() {
   const queryClient = useQueryClient();
   const { notify } = useToast();
   const [resourceFiles, setResourceFiles] = useState<Array<File | null>>([]);
+  const [placeholders, setPlaceholders] = useState<TaskPlaceholders | null>(
+    null,
+  );
+  const placeholdersInitialized = useRef(false);
+
+  useEffect(() => {
+    if (placeholdersInitialized.current) return;
+
+    placeholdersInitialized.current = true;
+    setPlaceholders(createTaskPlaceholders());
+  }, []);
 
   const {
     control,
@@ -162,7 +177,7 @@ export function CreateTaskForm() {
       <section className="flex flex-col gap-5">
         <Field label="Título" required error={errors.title?.message}>
           <Input
-            placeholder="Estudar Trigonometria"
+            placeholder={placeholders?.title}
             disabled={isPending}
             {...register('title')}
           />
@@ -170,7 +185,7 @@ export function CreateTaskForm() {
 
         <Field label="Descrição" hint="O que exatamente precisa ser feito?">
           <Textarea
-            placeholder="Revisar ângulos notáveis e a circunferência trigonométrica."
+            placeholder={placeholders?.description}
             disabled={isPending}
             {...register('description')}
           />
