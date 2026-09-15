@@ -1,6 +1,6 @@
 'use client';
 
-import { Info, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useFieldArray, useWatch } from 'react-hook-form';
 import type { Control, FieldErrors, UseFormRegister } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,10 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { CreateTaskFormValues } from '@/lib/domain/create-task-schema';
 import { EMPTY_RESOURCE } from '@/lib/domain/create-task-schema';
-import { RESOURCE_TYPE_OPTIONS, resourceTypeMeta } from '@/lib/domain/resource-type';
+import {
+  RESOURCE_TYPE_OPTIONS,
+  resourceTypeMeta,
+} from '@/lib/domain/resource-type';
 
 interface SharedProps {
   control: Control<CreateTaskFormValues>;
@@ -20,8 +23,6 @@ interface SharedProps {
   disabled?: boolean;
 }
 
-/** TODO(api): quando existir POST /resources/upload, este callback envia o
- *  arquivo e devolve a URL para preencher o campo de endereco. */
 type FileChangeHandler = (index: number, file: File | null) => void;
 
 interface ResourceFieldsetProps extends SharedProps {
@@ -43,6 +44,7 @@ function ResourceFieldset({
   const type = useWatch({ control, name: `resources.${index}.type` });
   const meta = resourceTypeMeta(type);
   const fieldErrors = errors.resources?.[index];
+  const typeField = register(`resources.${index}.type`);
 
   return (
     <fieldset className="flex flex-col gap-4 rounded-md border border-line bg-surface p-4">
@@ -58,7 +60,14 @@ function ResourceFieldset({
         </Field>
 
         <Field label="Tipo" required>
-          <Select disabled={disabled} {...register(`resources.${index}.type`)}>
+          <Select
+            disabled={disabled}
+            {...typeField}
+            onChange={(event) => {
+              typeField.onChange(event);
+              if (event.target.value !== 'PDF') onFileChange(null);
+            }}
+          >
             {RESOURCE_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -87,9 +96,6 @@ function ResourceFieldset({
           />
         </Field>
 
-        {/* PDF aceita arquivo. A rota de upload ainda nao existe, entao o
-            arquivo fica so no cliente e a tela diz isso em vez de fingir
-            que salvou. O que o POST /tasks persiste continua sendo a URL. */}
         {meta.acceptsUpload ? (
           <Field
             label="Arquivo"
@@ -97,15 +103,10 @@ function ResourceFieldset({
             description="Se o PDF estiver no seu computador, escolha o arquivo em vez do link."
           >
             <FileInput
-              accept="application/pdf,image/*"
+              accept="application/pdf,.pdf"
               disabled={disabled}
               onChange={onFileChange}
             />
-            <p className="mt-1 flex items-start gap-1.5 text-2xs text-ink-soft">
-              <Info aria-hidden className="mt-px size-3 shrink-0 text-ink-faint" />
-              O envio ainda não está disponível: o arquivo não é salvo ao criar a tarefa. Por
-              enquanto, use o endereço acima.
-            </p>
           </Field>
         ) : null}
 
@@ -141,15 +142,23 @@ export function ResourceFields({
   errors,
   disabled,
   onFileChange,
-}: SharedProps & { onFileChange?: FileChangeHandler }) {
-  const { fields, append, remove } = useFieldArray({ control, name: 'resources' });
+  onResourceRemove,
+}: SharedProps & {
+  onFileChange?: FileChangeHandler;
+  onResourceRemove?: (index: number) => void;
+}) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'resources',
+  });
 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-semibold text-ink">Recursos</h2>
         <p className="text-xs text-ink-soft">
-          Vídeos, livros, PDFs ou sites que ajudam nesta tarefa. Pode deixar em branco.
+          Vídeos, livros, PDFs ou sites que ajudam nesta tarefa. Pode deixar em
+          branco.
         </p>
       </div>
 
@@ -161,13 +170,19 @@ export function ResourceFields({
           register={register}
           errors={errors}
           disabled={disabled}
-          onRemove={() => remove(index)}
+          onRemove={() => {
+            onResourceRemove?.(index);
+            remove(index);
+          }}
           onFileChange={(file) => onFileChange?.(index, file)}
         />
       ))}
 
       <div>
-        <Button disabled={disabled} onClick={() => append({ ...EMPTY_RESOURCE })}>
+        <Button
+          disabled={disabled}
+          onClick={() => append({ ...EMPTY_RESOURCE })}
+        >
           <Plus aria-hidden className="size-4" />
           Adicionar recurso
         </Button>

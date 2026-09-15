@@ -13,11 +13,7 @@ import { RESOURCE_TYPES } from '@/types/api';
  *    em toCreateTaskInput — nunca enviada como "".
  */
 
-const criterion = z
-  .number()
-  .int()
-  .min(CRITERION_MIN)
-  .max(CRITERION_MAX);
+const criterion = z.number().int().min(CRITERION_MIN).max(CRITERION_MAX);
 
 const optionalUrl = z
   .string()
@@ -73,13 +69,22 @@ function omitEmpty(value: string): string | undefined {
  * Converte o que o formulario coletou no payload que o backend aceita.
  * Campos opcionais vazios sao OMITIDOS, nunca enviados como "".
  */
-export function toCreateTaskInput(values: CreateTaskFormValues): CreateTaskInput {
+export function toCreateTaskInput(
+  values: CreateTaskFormValues,
+  omittedResourceIndexes: ReadonlySet<number> = new Set(),
+): CreateTaskInput {
   const resources = values.resources
-    .filter((resource) => resource.title.trim() !== '')
-    .map((resource) => ({
+    .map((resource, index) => ({ resource, index }))
+    .filter(
+      ({ resource, index }) =>
+        resource.title.trim() !== '' && !omittedResourceIndexes.has(index),
+    )
+    .map(({ resource }) => ({
       title: resource.title.trim(),
       type: resource.type,
-      ...(omitEmpty(resource.url) ? { url: omitEmpty(resource.url) as string } : {}),
+      ...(omitEmpty(resource.url)
+        ? { url: omitEmpty(resource.url) as string }
+        : {}),
       ...(omitEmpty(resource.description)
         ? { description: omitEmpty(resource.description) as string }
         : {}),
@@ -87,7 +92,9 @@ export function toCreateTaskInput(values: CreateTaskFormValues): CreateTaskInput
 
   return {
     title: values.title.trim(),
-    ...(omitEmpty(values.description) ? { description: omitEmpty(values.description) as string } : {}),
+    ...(omitEmpty(values.description)
+      ? { description: omitEmpty(values.description) as string }
+      : {}),
     importance: values.importance,
     domain: values.domain,
     urgency: values.urgency,

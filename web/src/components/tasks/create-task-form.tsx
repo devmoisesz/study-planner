@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { CriterionField } from '@/components/tasks/criterion-field';
 import { ResourceFields } from '@/components/tasks/resource-fields';
@@ -13,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api/client';
-import { createTask } from '@/lib/api/tasks';
+import { createTaskWithPdfUploads } from '@/lib/api/tasks';
 import {
   CREATE_TASK_DEFAULTS,
   createTaskFormSchema,
@@ -62,6 +63,7 @@ export function CreateTaskForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { notify } = useToast();
+  const [resourceFiles, setResourceFiles] = useState<Array<File | null>>([]);
 
   const {
     control,
@@ -83,10 +85,43 @@ export function CreateTaskForm() {
   const [importance, domain, urgency, relevance] = criteria;
 
   const mutation = useMutation({
-    mutationFn: createTask,
-    onSuccess: async (task) => {
+    mutationFn: async (values: CreateTaskFormValues) => {
+      const pdfs = values.resources.flatMap((resource, index) => {
+        const file = resource.type === 'PDF' ? resourceFiles[index] : null;
+        if (!file) return [];
+
+        return [
+          {
+            title: resource.title.trim(),
+            ...(resource.description.trim()
+              ? { description: resource.description.trim() }
+              : {}),
+            file,
+            resourceIndex: index,
+          },
+        ];
+      });
+      const uploadedResourceIndexes = new Set(
+        pdfs.map((pdf) => pdf.resourceIndex),
+      );
+
+      return createTaskWithPdfUploads(
+        toCreateTaskInput(values, uploadedResourceIndexes),
+        pdfs.map(({ resourceIndex: _resourceIndex, ...pdf }) => pdf),
+      );
+    },
+    onSuccess: async ({ task, failedUploads }) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
       await queryClient.invalidateQueries({ queryKey: queryKeys.resources });
+
+      if (failedUploads > 0) {
+        notify(
+          `A tarefa foi criada, mas ${failedUploads} PDF${failedUploads > 1 ? 's' : ''} não ${failedUploads > 1 ? 'foram enviados' : 'foi enviado'}.`,
+          'error',
+        );
+        router.push(`/tarefas/${task.id}`);
+        return;
+      }
 
       notify(
         `"${task.title}" entrou no ranking com score ${task.score} — ${scoreBand(task.score).label.toLowerCase()}.`,
@@ -98,7 +133,10 @@ export function CreateTaskForm() {
       // cada mensagem para o campo certo em vez de um alerta generico.
       if (error instanceof ApiError && error.issues.length > 0) {
         for (const [path, message] of Object.entries(error.fieldErrors())) {
-          setError(path as keyof CreateTaskFormValues, { type: 'server', message });
+          setError(path as keyof CreateTaskFormValues, {
+            type: 'server',
+            message,
+          });
         }
         notify('Alguns campos precisam de ajuste.', 'error');
         return;
@@ -118,7 +156,7 @@ export function CreateTaskForm() {
   return (
     <form
       noValidate
-      onSubmit={handleSubmit((values) => mutation.mutate(toCreateTaskInput(values)))}
+      onSubmit={handleSubmit((values) => mutation.mutate(values))}
       className="flex flex-col gap-8"
     >
       <section className="flex flex-col gap-5">
@@ -143,8 +181,8 @@ export function CreateTaskForm() {
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-semibold text-ink">Prioridade</h2>
           <p className="text-xs text-ink-soft">
-            Estas quatro respostas definem o score inicial. Depois disso, a prioridade só muda
-            por produtividade ou aumento manual.
+            Estas quatro respostas definem o score inicial. Depois disso, a
+            prioridade só muda por produtividade ou aumento manual.
           </p>
         </div>
 
@@ -175,6 +213,18 @@ export function CreateTaskForm() {
         register={register}
         errors={errors}
         disabled={isPending}
+        onFileChange={(index, file) => {
+          setResourceFiles((current) => {
+            const next = [...current];
+            next[index] = file;
+            return next;
+          });
+        }}
+        onResourceRemove={(index) => {
+          setResourceFiles((current) =>
+            current.filter((_, currentIndex) => currentIndex !== index),
+          );
+        }}
       />
 
       <div className="flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:justify-end">

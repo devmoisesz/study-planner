@@ -17,7 +17,14 @@ describe('createTaskFormSchema', () => {
   it('aceita url vazia num recurso', () => {
     const result = createTaskFormSchema.safeParse({
       ...base,
-      resources: [{ title: 'Livro de Matemática', type: 'BOOK', url: '', description: 'Cap. 8' }],
+      resources: [
+        {
+          title: 'Livro de Matemática',
+          type: 'BOOK',
+          url: '',
+          description: 'Cap. 8',
+        },
+      ],
     });
     expect(result.success).toBe(true);
   });
@@ -25,15 +32,21 @@ describe('createTaskFormSchema', () => {
   it('reprova url malformada', () => {
     const result = createTaskFormSchema.safeParse({
       ...base,
-      resources: [{ title: 'Aula', type: 'YOUTUBE', url: 'youtube', description: '' }],
+      resources: [
+        { title: 'Aula', type: 'YOUTUBE', url: 'youtube', description: '' },
+      ],
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.path).toEqual(['resources', 0, 'url']);
   });
 
   it('recusa criterio fora de 1..10', () => {
-    expect(createTaskFormSchema.safeParse({ ...base, importance: 0 }).success).toBe(false);
-    expect(createTaskFormSchema.safeParse({ ...base, importance: 11 }).success).toBe(false);
+    expect(
+      createTaskFormSchema.safeParse({ ...base, importance: 0 }).success,
+    ).toBe(false);
+    expect(
+      createTaskFormSchema.safeParse({ ...base, importance: 11 }).success,
+    ).toBe(false);
   });
 });
 
@@ -43,10 +56,20 @@ describe('toCreateTaskInput', () => {
     // que reprova "" com 400.
     const input = toCreateTaskInput({
       ...base,
-      resources: [{ title: 'Livro de Matemática', type: 'BOOK', url: '', description: '' }],
+      resources: [
+        {
+          title: 'Livro de Matemática',
+          type: 'BOOK',
+          url: '',
+          description: '',
+        },
+      ],
     });
 
-    expect(input.resources?.[0]).toEqual({ title: 'Livro de Matemática', type: 'BOOK' });
+    expect(input.resources?.[0]).toEqual({
+      title: 'Livro de Matemática',
+      type: 'BOOK',
+    });
     expect(input.resources?.[0]).not.toHaveProperty('url');
   });
 
@@ -63,12 +86,39 @@ describe('toCreateTaskInput', () => {
     const input = toCreateTaskInput({
       ...base,
       resources: [
-        { title: 'Aula', type: 'YOUTUBE', url: 'https://youtube.com/x', description: '' },
+        {
+          title: 'Aula',
+          type: 'YOUTUBE',
+          url: 'https://youtube.com/x',
+          description: '',
+        },
         { title: '  ', type: 'BOOK', url: '', description: '' },
       ],
     });
 
     expect(input.resources).toHaveLength(1);
+  });
+
+  it('omite o recurso que sera criado depois pelo upload de PDF', () => {
+    const input = toCreateTaskInput(
+      {
+        ...base,
+        resources: [
+          { title: 'Apostila', type: 'PDF', url: '', description: '' },
+          {
+            title: 'Site',
+            type: 'WEBSITE',
+            url: 'https://example.com',
+            description: '',
+          },
+        ],
+      },
+      new Set([0]),
+    );
+
+    expect(input.resources).toEqual([
+      { title: 'Site', type: 'WEBSITE', url: 'https://example.com' },
+    ]);
   });
 
   it('remove espacos das pontas', () => {

@@ -63,16 +63,25 @@ async function parseBody(response: Response): Promise<unknown> {
   }
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
   let response: Response;
+  const headers = new Headers(init?.headers);
+  const isFormData =
+    typeof FormData !== 'undefined' && init?.body instanceof FormData;
+
+  // O browser precisa definir sozinho o boundary de multipart/form-data.
+  // Para os demais requests, a API recebe JSON como antes.
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   try {
     response = await fetch(`${BASE_PATH}${path}`, {
       ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...init?.headers,
-      },
+      headers,
     });
   } catch {
     throw new ApiError('Não foi possível falar com o servidor.', 0);
