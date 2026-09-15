@@ -15,11 +15,9 @@ describe('Upload Pdf Service', () => {
       create: vi.fn().mockResolvedValue({ id: 'resource-1' }),
     } as unknown as ResourcesRepository;
     const fileStorage = {
-      uploadPdf: vi
-        .fn()
-        .mockResolvedValue({
-          url: 'https://res.cloudinary.com/demo/raw/upload/file.pdf',
-        }),
+      uploadPdf: vi.fn().mockResolvedValue({
+        url: 'https://res.cloudinary.com/demo/image/upload/file.pdf',
+      }),
     } as unknown as FileStorage;
     const sut = new UploadPdfService(resourcesRepository, fileStorage);
 
@@ -37,7 +35,7 @@ describe('Upload Pdf Service', () => {
     expect(resourcesRepository.create).toHaveBeenCalledWith({
       ...input,
       type: 'PDF',
-      url: 'https://res.cloudinary.com/demo/raw/upload/file.pdf',
+      url: 'https://res.cloudinary.com/demo/image/upload/file.pdf',
     });
   });
 
@@ -57,5 +55,25 @@ describe('Upload Pdf Service', () => {
     ).rejects.toThrow('The uploaded file must be a valid PDF.');
 
     expect(fileStorage.uploadPdf).not.toHaveBeenCalled();
+  });
+
+  it('reports a storage rejection as a bad gateway', async () => {
+    const resourcesRepository = {
+      create: vi.fn(),
+    } as unknown as ResourcesRepository;
+    const fileStorage = {
+      uploadPdf: vi.fn().mockRejectedValue(new Error('Cloudinary 403')),
+    } as unknown as FileStorage;
+    const sut = new UploadPdfService(resourcesRepository, fileStorage);
+
+    await expect(
+      sut.execute(input, {
+        buffer: Buffer.from('%PDF-1.7'),
+        originalname: 'calculo.pdf',
+        mimetype: 'application/pdf',
+      }),
+    ).rejects.toMatchObject({ status: 502 });
+
+    expect(resourcesRepository.create).not.toHaveBeenCalled();
   });
 });
