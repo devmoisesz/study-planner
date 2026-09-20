@@ -23,6 +23,8 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRESQL_USERNAME:-study_planner}:${POSTGRESQL_PASSWORD:-study_planner}@postgres:5432/${POSTGRESQL_DATABASE:-study_planner}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
@@ -46,6 +48,7 @@ services:
         ORDO_API_ORIGIN: http://api:3000
     environment:
       PORT: 3333
+      ORDO_API_ORIGIN: http://api:3000
     depends_on:
       api:
         condition: service_healthy

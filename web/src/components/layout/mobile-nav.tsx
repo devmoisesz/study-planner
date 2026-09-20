@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { Logo } from '@/components/layout/logo';
 import { NavLinks } from '@/components/layout/nav-links';
+import { LogoutButton } from '@/components/auth/logout-button';
 
 /**
  * Abaixo de md a sidebar vira drawer, como pede o front.md secao 23.
@@ -42,7 +43,11 @@ export function MobileNav() {
   return (
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-sidebar-line bg-sidebar px-4 md:hidden">
-        <Link href="/" aria-label="Study Planner — ir para Prioridades" className="rounded-md">
+        <Link
+          href="/"
+          aria-label="Study Planner — ir para Prioridades"
+          className="rounded-md"
+        >
           <Logo />
         </Link>
 
@@ -85,6 +90,10 @@ export function MobileNav() {
           <nav className="flex-1 px-3 py-4">
             <NavLinks variant="drawer" onNavigate={close} />
           </nav>
+
+          <div className="border-t border-sidebar-line p-3">
+            <LogoutButton />
+          </div>
         </div>
       </dialog>
     </>
