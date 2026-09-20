@@ -3,12 +3,14 @@ import { ZodValidationPipe } from '../../validation/pipes/zod-validation.pipe.js
 import { createSessionSchema } from '../schemas/create-session.schema.js';
 import type { CreateSessionDto } from '../schemas/create-session.schema.js';
 import { CreateSessionService } from '../services/create-session.service.js';
+import { Public } from '../../auth/decorators/public.decorator.js';
 
 @Controller('/sessions')
 export class CreateSessionController {
   constructor(private readonly createSessionService: CreateSessionService) {}
 
   @Post()
+  @Public()
   @HttpCode(200)
   async execute(
     @Body(new ZodValidationPipe(createSessionSchema)) body: CreateSessionDto,
