@@ -1,17 +1,17 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { TasksRepository } from "../repositories/tasks.repository.js";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TasksRepository } from '../repositories/tasks.repository.js';
 
 @Injectable()
 export class GetTaskService {
-    constructor(private readonly tasksRepository: TasksRepository) {}
+  constructor(private readonly tasksRepository: TasksRepository) {}
 
-    async execute(id: string) {
-        const task = await this.tasksRepository.findDetailsById(id);
+  async execute(userId: string, id: string) {
+    const task = await this.tasksRepository.findDetailsById(id, userId);
 
-        if (!task) {
-            throw new NotFoundException("Task not found");
-        }
-
-        return task;
+    if (!task) {
+      throw new NotFoundException('Task not found');
     }
+
+    return task;
+  }
 }

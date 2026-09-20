@@ -10,9 +10,9 @@ describe('List Tasks Service', () => {
     } as unknown as TasksRepository;
     const sut = new ListTasksService(tasksRepository);
 
-    const result = await sut.execute();
+    const result = await sut.execute('user-1');
 
     expect(result).toEqual(tasks);
-    expect(tasksRepository.listTasks).toHaveBeenCalledOnce();
+    expect(tasksRepository.listTasks).toHaveBeenCalledWith('user-1');
   });
 });

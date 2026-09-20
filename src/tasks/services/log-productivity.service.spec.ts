@@ -1,25 +1,30 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { TasksInMemory } from "../repositories/in-memory/tasks-in-memory.js";
-import { LogProductivityService } from "./log-productivity.service.js";
-import { ProductivityInMemory } from "../repositories/in-memory/productivity-in-memory.js";
+import { beforeEach, describe, expect, it } from 'vitest';
+import { TasksInMemory } from '../repositories/in-memory/tasks-in-memory.js';
+import { LogProductivityService } from './log-productivity.service.js';
+import { ProductivityInMemory } from '../repositories/in-memory/productivity-in-memory.js';
 
 let tasksRepository: TasksInMemory;
 let productivityRepository: ProductivityInMemory;
 let sut: LogProductivityService;
 
-describe("Log Productivity Service", () => {
+describe('Log Productivity Service', () => {
+  const userId = 'user-1';
   beforeEach(() => {
     tasksRepository = new TasksInMemory();
     productivityRepository = new ProductivityInMemory();
     sut = new LogProductivityService(tasksRepository, productivityRepository);
   });
 
-  it("deve ser possivel registrar a produtividade", async () => {
-    const task = await tasksRepository.create({title: 'Teste e2e', score: 70})
+  it('deve ser possivel registrar a produtividade', async () => {
+    const task = await tasksRepository.create({
+      userId,
+      title: 'Teste e2e',
+      score: 70,
+    });
 
-    await sut.execute(task.id, 0.5);
+    await sut.execute(userId, task.id, 0.5);
 
-    const taskWithNewScore = await tasksRepository.findById(task.id)
+    const taskWithNewScore = await tasksRepository.findById(task.id, userId);
 
     expect(taskWithNewScore?.score).toEqual(35);
     expect(productivityRepository.items).toEqual([
@@ -30,12 +35,12 @@ describe("Log Productivity Service", () => {
     ]);
   });
 
-  it("arredonda o score e armazena a porcentagem em pontos percentuais", async () => {
-    const task = await tasksRepository.create({ title: "Teste", score: 71 });
+  it('arredonda o score e armazena a porcentagem em pontos percentuais', async () => {
+    const task = await tasksRepository.create({ userId, title: 'Teste', score: 71 });
 
-    await sut.execute(task.id, 0.01);
+    await sut.execute(userId, task.id, 0.01);
 
-    await expect(tasksRepository.findById(task.id)).resolves.toEqual(
+    await expect(tasksRepository.findById(task.id, userId)).resolves.toEqual(
       expect.objectContaining({ score: 70 }),
     );
     expect(productivityRepository.items[0]).toEqual(

@@ -9,8 +9,8 @@ export class LogProductivityService {
     private readonly productivityRepository: ProductivityRepository,
   ) {}
 
-  async execute(id: string, percentage: number) {
-    const task = await this.tasksRepository.findById(id);
+  async execute(userId: string, id: string, percentage: number) {
+    const task = await this.tasksRepository.findById(id, userId);
 
     if (!task) {
       throw new NotFoundException('Task Not Found');
@@ -18,7 +18,7 @@ export class LogProductivityService {
 
     const newScore = Math.round(task.score * (1 - percentage));
 
-    await this.tasksRepository.changeScore(id, newScore);
+    await this.tasksRepository.changeScore(id, userId, newScore);
 
     const formattedPercentage = Math.round(percentage * 100);
 
