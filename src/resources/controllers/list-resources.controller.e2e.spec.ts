@@ -4,77 +4,56 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { AppModule } from "../../app.module.js";
 import { PrismaService } from "../../database/prisma.service.js";
+import { createAuthenticatedUser } from "../../testing/create-authenticated-user.js";
 
 describe("List Resources (E2E)", () => {
     let app: INestApplication;
     let prisma: PrismaService;
-    let createdTaskId: string;
+    let userId: string;
+    let accessToken: string;
+    let otherUserId: string;
+    let ownTaskId: string;
 
     beforeAll(async () => {
-        const moduleRef = await Test.createTestingModule({
-            imports: [AppModule]
-        }).compile();
-
+        const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
         app = moduleRef.createNestApplication();
         prisma = app.get(PrismaService);
-
         await app.init();
         await prisma.$connect();
+        ({ user: { id: userId }, accessToken } = await createAuthenticatedUser(app, prisma));
+        ({ user: { id: otherUserId } } = await createAuthenticatedUser(app, prisma));
 
-        const task = await prisma.task.create({
+        ownTaskId = (await prisma.task.create({
             data: {
-                title: "E2E - Tarefa com materiais",
+                title: "E2E - Materiais próprios",
                 score: 64,
-                resources: {
-                    create: [
-                        {
-                            title: "E2E - Aula no YouTube",
-                            type: "YOUTUBE",
-                            url: "https://youtube.com/e2e"
-                        },
-                        {
-                            title: "E2E - Livro",
-                            type: "BOOK",
-                            description: "Capítulo 8"
-                        }
-                    ]
-                }
+                userId,
+                resources: { create: [{ title: "E2E - Livro", type: "BOOK" }] }
+            }
+        })).id;
+        await prisma.task.create({
+            data: {
+                title: "E2E - Materiais de outra pessoa",
+                score: 64,
+                userId: otherUserId,
+                resources: { create: [{ title: "E2E - Privado", type: "PDF" }] }
             }
         });
-
-        createdTaskId = task.id;
     });
 
     afterAll(async () => {
-        await prisma.task.delete({ where: { id: createdTaskId } });
+        await prisma.user.deleteMany({ where: { id: { in: [userId, otherUserId] } } });
         await app.close();
     });
 
-    test("[GET] /resources", async () => {
-        const response = await request(app.getHttpServer()).get("/resources");
+    test("[GET] /resources returns only resources owned by the user", async () => {
+        const response = await request(app.getHttpServer())
+            .get("/resources")
+            .set("Authorization", `Bearer ${accessToken}`);
 
         expect(response.statusCode).toBe(200);
-
-        const created = response.body.filter(
-            (resource: { taskId: string }) => resource.taskId === createdTaskId
-        );
-
-        expect(created).toHaveLength(2);
-        expect(created).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    title: "E2E - Aula no YouTube",
-                    type: "YOUTUBE",
-                    url: "https://youtube.com/e2e",
-                    taskTitle: "E2E - Tarefa com materiais"
-                }),
-                expect.objectContaining({
-                    title: "E2E - Livro",
-                    type: "BOOK",
-                    url: null,
-                    taskTitle: "E2E - Tarefa com materiais"
-                })
-            ])
-        );
+        expect(response.body).toEqual([
+            expect.objectContaining({ taskId: ownTaskId, title: "E2E - Livro" })
+        ]);
     });
 });

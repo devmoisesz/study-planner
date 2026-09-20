@@ -6,6 +6,8 @@ import {
 import { ResourcesRepository } from '../repositories/resources.repository.js';
 import { FileStorage } from '../../storage/file-storage.js';
 import type { UploadPdfDto } from '../schemas/upload-pdf.schema.js';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository.js';
+import { NotFoundException } from '@nestjs/common';
 
 export interface UploadedPdf {
   buffer: Buffer;
@@ -18,15 +20,22 @@ export class UploadPdfService {
   constructor(
     private readonly resourcesRepository: ResourcesRepository,
     private readonly fileStorage: FileStorage,
+    private readonly tasksRepository: TasksRepository,
   ) {}
 
-  async execute(data: UploadPdfDto, file?: UploadedPdf) {
+  async execute(userId: string, data: UploadPdfDto, file?: UploadedPdf) {
     if (
       !file ||
       file.mimetype !== 'application/pdf' ||
       !file.buffer.subarray(0, 4).equals(Buffer.from('%PDF'))
     ) {
       throw new BadRequestException('The uploaded file must be a valid PDF.');
+    }
+
+    const task = await this.tasksRepository.findById(data.taskId, userId);
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
     }
 
     let storedFile;

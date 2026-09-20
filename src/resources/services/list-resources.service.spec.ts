@@ -16,9 +16,9 @@ describe('List Resources Service', () => {
     } as unknown as ResourcesRepository;
     const sut = new ListResourcesService(resourcesRepository);
 
-    const result = await sut.execute();
+    const result = await sut.execute('user-1');
 
     expect(result).toEqual(resources);
-    expect(resourcesRepository.listResources).toHaveBeenCalledOnce();
+    expect(resourcesRepository.listResources).toHaveBeenCalledWith('user-1');
   });
 });
