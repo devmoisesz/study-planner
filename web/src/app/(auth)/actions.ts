@@ -32,7 +32,9 @@ class AuthApiError extends Error {
 }
 
 function apiOrigin(): string {
-  return process.env.ORDO_API_ORIGIN ?? 'http://localhost:3000';
+  return (
+    process.env.ORDO_API_ORIGIN ?? 'https://study-planner-nesv.onrender.com'
+  );
 }
 
 async function post<T>(path: string, data: object): Promise<T> {

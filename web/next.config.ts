@@ -5,7 +5,8 @@ import type { NextConfig } from 'next';
  * O rewrite abaixo serve /api/* pela mesma origem do front,
  * entao o browser nunca faz requisicao cross-origin.
  */
-const API_ORIGIN = process.env.ORDO_API_ORIGIN ?? 'http://localhost:3000';
+const API_ORIGIN =
+  process.env.ORDO_API_ORIGIN ?? 'https://study-planner-nesv.onrender.com';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
