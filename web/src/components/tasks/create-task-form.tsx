@@ -13,7 +13,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
-import { ApiError } from '@/lib/api/client';
+import { ApiError, getErrorMessage } from '@/lib/api/client';
 import { createTaskWithPdfUploads } from '@/lib/api/tasks';
 import {
   CREATE_TASK_DEFAULTS,
@@ -125,13 +125,19 @@ export function CreateTaskForm() {
         pdfs.map(({ resourceIndex: _resourceIndex, ...pdf }) => pdf),
       );
     },
-    onSuccess: async ({ task, failedUploads }) => {
+    onSuccess: async ({ task, failedUploads, uploadFailures }) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
       await queryClient.invalidateQueries({ queryKey: queryKeys.resources });
 
       if (failedUploads > 0) {
+        const tooLarge = uploadFailures.find(
+          (failure) =>
+            failure.error instanceof ApiError && failure.error.status === 413,
+        );
         notify(
-          `A tarefa foi criada, mas ${failedUploads} PDF${failedUploads > 1 ? 's' : ''} não ${failedUploads > 1 ? 'foram enviados' : 'foi enviado'}.`,
+          tooLarge
+            ? `A tarefa foi criada, mas o PDF “${tooLarge.title}” excede o limite de 10 MB. Escolha um arquivo menor.`
+            : `A tarefa foi criada, mas ${failedUploads} PDF${failedUploads > 1 ? 's' : ''} não ${failedUploads > 1 ? 'foram enviados' : 'foi enviado'}. Tente enviá-lo${failedUploads > 1 ? 's' : ''} novamente.`,
           'error',
         );
         router.push(`/tarefas/${task.id}`);
@@ -158,9 +164,10 @@ export function CreateTaskForm() {
       }
 
       notify(
-        error instanceof ApiError && error.isNetworkError
-          ? 'O servidor não respondeu. Verifique se a API está no ar.'
-          : 'Não foi possível criar a tarefa.',
+        getErrorMessage(
+          error,
+          'Não foi possível criar a tarefa. Tente novamente.',
+        ),
         'error',
       );
     },

@@ -15,7 +15,7 @@ import { buttonClasses } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { useToast } from '@/components/ui/toast';
-import { ApiError } from '@/lib/api/client';
+import { getErrorMessage } from '@/lib/api/client';
 import { scoreBand } from '@/lib/domain/score';
 
 /**
@@ -23,18 +23,28 @@ import { scoreBand } from '@/lib/domain/score';
  * carregando / vazio / erro / lista, e nada mais.
  */
 export function TasksView() {
-  const { data: tasks, isPending, isError, error, refetch, isFetching } = useTasks();
+  const {
+    data: tasks,
+    isPending,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useTasks();
   const { notify } = useToast();
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   /** Ultimo card cujo score mudou — some sozinho quando a animacao acaba. */
-  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(
+    null,
+  );
 
   const productivity = useRegisterProductivity();
   const priority = useIncreasePriority();
   const removal = useDeleteTask();
 
-  function failed(message: string) {
-    return () => notify(message, 'error');
+  function failed(fallback: string) {
+    return (error: unknown) =>
+      notify(getErrorMessage(error, fallback), 'error');
   }
 
   function handleProductivity(id: string, percentage: number) {
@@ -74,7 +84,8 @@ export function TasksView() {
 
     setPendingTaskId(id);
     removal.mutate(id, {
-      onSuccess: () => notify(title ? `"${title}" foi excluída.` : 'Tarefa excluída.'),
+      onSuccess: () =>
+        notify(title ? `"${title}" foi excluída.` : 'Tarefa excluída.'),
       onError: failed('Não foi possível excluir a tarefa.'),
       onSettled: () => setPendingTaskId(null),
     });
@@ -86,11 +97,10 @@ export function TasksView() {
     return (
       <ErrorState
         title="Não foi possível carregar suas tarefas"
-        description={
-          error instanceof ApiError && error.isNetworkError
-            ? 'O servidor não respondeu. Verifique se a API está no ar.'
-            : 'Algo deu errado ao buscar o ranking.'
-        }
+        description={getErrorMessage(
+          error,
+          'Não foi possível carregar suas tarefas. Tente novamente.',
+        )}
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />
@@ -104,7 +114,10 @@ export function TasksView() {
         title="Nenhuma tarefa ainda"
         description="Crie sua primeira tarefa para começar a organizar suas prioridades."
         action={
-          <Link href="/tarefas/nova" className={buttonClasses({ variant: 'primary' })}>
+          <Link
+            href="/tarefas/nova"
+            className={buttonClasses({ variant: 'primary' })}
+          >
             <Plus aria-hidden className="size-4" />
             Nova tarefa
           </Link>

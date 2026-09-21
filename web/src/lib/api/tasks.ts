@@ -31,6 +31,7 @@ export type PendingPdfUpload = Omit<UploadPdfInput, 'taskId'>;
 export interface CreateTaskWithPdfUploadsResult {
   task: TaskWithResources;
   failedUploads: number;
+  uploadFailures: Array<{ title: string; error: unknown }>;
 }
 
 export async function listTasks(): Promise<RankedTask[]> {
@@ -72,10 +73,16 @@ export async function createTaskWithPdfUploads(
     pdfs.map((pdf) => uploadPdf({ ...pdf, taskId: task.id })),
   );
 
+  const uploadFailures = uploads.flatMap((result, index) =>
+    result.status === 'rejected'
+      ? [{ title: pdfs[index]!.title, error: result.reason }]
+      : [],
+  );
+
   return {
     task,
-    failedUploads: uploads.filter((result) => result.status === 'rejected')
-      .length,
+    failedUploads: uploadFailures.length,
+    uploadFailures,
   };
 }
 

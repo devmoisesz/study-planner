@@ -18,6 +18,16 @@ interface ApiErrorBody {
   errors?: ApiIssue[];
 }
 
+const HTTP_ERROR_MESSAGES: Record<number, string> = {
+  400: 'Confira os dados informados e tente novamente.',
+  401: 'Sua sessão expirou. Entre novamente para continuar.',
+  403: 'Você não tem permissão para realizar esta ação.',
+  404: 'Não encontramos o item solicitado. Atualize a página e tente novamente.',
+  409: 'Não foi possível concluir porque esses dados já existem.',
+  413: 'Este PDF excede o limite de 10 MB. Escolha um arquivo menor.',
+  500: 'O servidor encontrou um problema. Tente novamente em alguns instantes.',
+};
+
 export class ApiError extends Error {
   readonly status: number;
   readonly issues: ApiIssue[];
@@ -48,6 +58,14 @@ export class ApiError extends Error {
 
     return result;
   }
+}
+
+/** Retorna uma mensagem segura e útil para exibir na interface. */
+export function getErrorMessage(
+  error: unknown,
+  fallback = 'Não foi possível concluir esta ação. Tente novamente.',
+): string {
+  return error instanceof ApiError ? error.message : fallback;
 }
 
 const BASE_PATH = '/api';
@@ -84,7 +102,10 @@ export async function apiFetch<T>(
       headers,
     });
   } catch {
-    throw new ApiError('Não foi possível falar com o servidor.', 0);
+    throw new ApiError(
+      'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+      0,
+    );
   }
 
   const body = await parseBody(response);
@@ -92,9 +113,8 @@ export async function apiFetch<T>(
   if (!response.ok) {
     const parsed = (body ?? {}) as ApiErrorBody;
     const message =
-      response.status === 400
-        ? 'Alguns campos precisam de ajuste.'
-        : (parsed.message ?? 'O servidor não conseguiu concluir a operação.');
+      HTTP_ERROR_MESSAGES[response.status] ??
+      'Não foi possível concluir agora. Tente novamente em alguns instantes.';
 
     throw new ApiError(message, response.status, parsed.errors ?? []);
   }

@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { resourceTypeLabel } from '@/lib/domain/resource-type';
+import { getErrorMessage } from '@/lib/api/client';
 import { RESOURCE_TYPES } from '@/types/api';
 
 function ResourcesSkeleton() {
@@ -30,7 +31,14 @@ function ResourcesSkeleton() {
 }
 
 export function ResourcesView() {
-  const { data: resources, isPending, isError, refetch, isFetching } = useResources();
+  const {
+    data: resources,
+    isPending,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useResources();
 
   if (isPending) return <ResourcesSkeleton />;
 
@@ -38,7 +46,10 @@ export function ResourcesView() {
     return (
       <ErrorState
         title="Não foi possível carregar seus materiais"
-        description="O servidor não respondeu."
+        description={getErrorMessage(
+          error,
+          'Não foi possível carregar seus materiais. Tente novamente.',
+        )}
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />
@@ -52,7 +63,10 @@ export function ResourcesView() {
         title="Nenhum material ainda"
         description="Os vídeos, livros e sites que você adicionar às tarefas aparecem aqui."
         action={
-          <Link href="/tarefas/nova" className={buttonClasses({ variant: 'primary' })}>
+          <Link
+            href="/tarefas/nova"
+            className={buttonClasses({ variant: 'primary' })}
+          >
             <Plus aria-hidden className="size-4" />
             Nova tarefa
           </Link>

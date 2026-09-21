@@ -1,6 +1,13 @@
 'use client';
 
-import { ArrowLeft, Layers, Pencil, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  ArrowLeft,
+  Layers,
+  Pencil,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -25,11 +32,18 @@ import { Card } from '@/components/ui/card';
 import { ErrorState } from '@/components/ui/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
+import { getErrorMessage } from '@/lib/api/client';
 import { scoreBand } from '@/lib/domain/score';
 
 type OpenDialog = 'productivity' | 'priority' | 'delete' | null;
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-semibold text-ink">{title}</h2>
@@ -53,7 +67,14 @@ function DetailSkeleton() {
 export function TaskDetailView({ taskId }: { taskId: string }) {
   const router = useRouter();
   const { notify } = useToast();
-  const { data: task, isPending, isError, refetch, isFetching } = useTask(taskId);
+  const {
+    data: task,
+    isPending,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useTask(taskId);
 
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -70,7 +91,14 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     return (
       <ErrorState
         title="Não foi possível abrir esta tarefa"
-        description="Ela pode ter sido excluída, ou o servidor não respondeu."
+        description={
+          isError
+            ? getErrorMessage(
+                error,
+                'Não foi possível carregar esta tarefa. Tente novamente.',
+              )
+            : 'Esta tarefa não está mais disponível.'
+        }
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />
@@ -84,8 +112,16 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     productivity.mutate(
       { id: taskId, percentage },
       {
-        onSuccess: (score) => notify(`Produtividade registrada. O score agora é ${score}.`),
-        onError: () => notify('Não foi possível registrar a produtividade.', 'error'),
+        onSuccess: (score) =>
+          notify(`Produtividade registrada. O score agora é ${score}.`),
+        onError: (error) =>
+          notify(
+            getErrorMessage(
+              error,
+              'Não foi possível registrar a produtividade. Tente novamente.',
+            ),
+            'error',
+          ),
       },
     );
   }
@@ -95,8 +131,16 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     priority.mutate(
       { id: taskId, percentage },
       {
-        onSuccess: (score) => notify(`Prioridade aumentada. O score agora é ${score}.`),
-        onError: () => notify('Não foi possível aumentar a prioridade.', 'error'),
+        onSuccess: (score) =>
+          notify(`Prioridade aumentada. O score agora é ${score}.`),
+        onError: (error) =>
+          notify(
+            getErrorMessage(
+              error,
+              'Não foi possível aumentar a prioridade. Tente novamente.',
+            ),
+            'error',
+          ),
       },
     );
   }
@@ -108,7 +152,14 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
         notify(`"${task!.title}" foi excluída.`);
         router.push('/');
       },
-      onError: () => notify('Não foi possível excluir a tarefa.', 'error'),
+      onError: (error) =>
+        notify(
+          getErrorMessage(
+            error,
+            'Não foi possível excluir a tarefa. Tente novamente.',
+          ),
+          'error',
+        ),
     });
   }
 
@@ -120,7 +171,14 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
           setIsEditing(false);
           notify('Alterações salvas.');
         },
-        onError: () => notify('Não foi possível salvar as alterações.', 'error'),
+        onError: (error) =>
+          notify(
+            getErrorMessage(
+              error,
+              'Não foi possível salvar as alterações. Tente novamente.',
+            ),
+            'error',
+          ),
       },
     );
   }
@@ -138,7 +196,10 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
       {isEditing ? (
         <Card className="p-5">
           <EditTaskForm
-            defaultValues={{ title: task.title, description: task.description ?? '' }}
+            defaultValues={{
+              title: task.title,
+              description: task.description ?? '',
+            }}
             onCancel={() => setIsEditing(false)}
             onSubmit={handleUpdate}
             isPending={update.isPending}
@@ -152,7 +213,9 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             </h1>
 
             {/* front.md secao 4: a cor entra so no trilho, nunca no card inteiro. */}
-            <Card className={`flex items-center gap-4 border-l-4 p-5 ${band.borderLeft}`}>
+            <Card
+              className={`flex items-center gap-4 border-l-4 p-5 ${band.borderLeft}`}
+            >
               <ScoreNumber score={task.score} size="lg" />
               <div className="flex flex-col items-start gap-1">
                 <PriorityBadge score={task.score} />
@@ -169,12 +232,17 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             </Section>
           ) : null}
 
-          <Section title={`Recursos${task.resources.length > 0 ? ` (${task.resources.length})` : ''}`}>
+          <Section
+            title={`Recursos${task.resources.length > 0 ? ` (${task.resources.length})` : ''}`}
+          >
             {task.resources.length > 0 ? (
               <ResourceList resources={task.resources} />
             ) : (
               <p className="flex items-center gap-2 rounded-md border border-dashed border-line px-4 py-6 text-sm text-ink-soft">
-                <Layers aria-hidden className="size-4 shrink-0 text-ink-faint" />
+                <Layers
+                  aria-hidden
+                  className="size-4 shrink-0 text-ink-faint"
+                />
                 Nenhum material cadastrado para esta tarefa.
               </p>
             )}
@@ -188,7 +256,10 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                     key={entry.id}
                     className="flex items-center gap-3 rounded-md border border-line bg-surface px-4 py-3"
                   >
-                    <TrendingDown aria-hidden className="size-4 shrink-0 text-ink-faint" />
+                    <TrendingDown
+                      aria-hidden
+                      className="size-4 shrink-0 text-ink-faint"
+                    />
                     <span className="tabular text-sm font-semibold text-ink">
                       {entry.percentage}%
                     </span>
@@ -208,14 +279,18 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
               </ol>
             ) : (
               <p className="rounded-md border border-dashed border-line px-4 py-6 text-sm text-ink-soft">
-                Você ainda não registrou progresso aqui. Ao registrar, a prioridade cai.
+                Você ainda não registrou progresso aqui. Ao registrar, a
+                prioridade cai.
               </p>
             )}
           </Section>
 
           <Section title="Ações">
             <div className="flex flex-wrap gap-2">
-              <Button variant="primary" onClick={() => setDialog('productivity')}>
+              <Button
+                variant="primary"
+                onClick={() => setDialog('productivity')}
+              >
                 <TrendingDown aria-hidden className="size-4" />
                 Registrar produtividade
               </Button>

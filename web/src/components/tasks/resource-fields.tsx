@@ -100,7 +100,7 @@ function ResourceFieldset({
           <Field
             label="Arquivo"
             className="sm:col-span-2"
-            description="Se o PDF estiver no seu computador, escolha o arquivo em vez do link."
+            description="Se o PDF estiver no seu computador, escolha o arquivo em vez do link. Limite: 10 MB."
           >
             <FileInput
               accept="application/pdf,.pdf"

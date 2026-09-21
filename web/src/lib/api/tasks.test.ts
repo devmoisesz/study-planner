@@ -293,6 +293,50 @@ describe('API de tarefas', () => {
     );
 
     expect(order).toEqual(['/api/tasks', '/api/resources/pdf']);
-    expect(result).toEqual({ task: createdTask, failedUploads: 0 });
+    expect(result).toEqual({
+      task: createdTask,
+      failedUploads: 0,
+      uploadFailures: [],
+    });
+  });
+
+  it('mantém o motivo de um upload rejeitado para a interface informar o usuário', async () => {
+    const createdTask = { ...task('nova', 'Nova tarefa', 50), resources: [] };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const path = new URL(url, 'https://ordo.test').pathname;
+        if (path === '/api/tasks') return json(createdTask, 201);
+        return new Response(null, { status: 413 });
+      }),
+    );
+
+    const result = await createTaskWithPdfUploads(
+      {
+        title: 'Nova tarefa',
+        importance: 5,
+        domain: 5,
+        urgency: 5,
+        relevance: 5,
+      },
+      [
+        {
+          title: 'Apostila completa',
+          file: new File(['%PDF-1.7'], 'apostila.pdf', {
+            type: 'application/pdf',
+          }),
+        },
+      ],
+    );
+
+    expect(result.failedUploads).toBe(1);
+    expect(result.uploadFailures[0]).toMatchObject({
+      title: 'Apostila completa',
+      error: {
+        status: 413,
+        message: 'Este PDF excede o limite de 10 MB. Escolha um arquivo menor.',
+      },
+    });
   });
 });
