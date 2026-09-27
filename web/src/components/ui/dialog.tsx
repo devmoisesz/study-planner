@@ -13,6 +13,7 @@ export interface DialogProps {
   children?: ReactNode;
   footer?: ReactNode;
   className?: string;
+  dismissible?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export function Dialog({
   children,
   footer,
   className,
+  dismissible = true,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const id = useId();
@@ -53,7 +55,7 @@ export function Dialog({
   }, [open]);
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === dialogRef.current) onClose();
+    if (dismissible && event.target === dialogRef.current) onClose();
   }
 
   return (
@@ -64,6 +66,9 @@ export function Dialog({
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      onCancel={(event) => {
+        if (!dismissible) event.preventDefault();
+      }}
       onClick={handleBackdropClick}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
@@ -82,7 +87,10 @@ export function Dialog({
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 id={titleId} className="font-display text-lg font-semibold text-ink">
+            <h2
+              id={titleId}
+              className="font-display text-lg font-semibold text-ink"
+            >
               {title}
             </h2>
             {description ? (
@@ -95,6 +103,7 @@ export function Dialog({
           <button
             type="button"
             onClick={onClose}
+            disabled={!dismissible}
             aria-label="Fechar"
             className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-ink-faint transition-colors hover:bg-background hover:text-ink"
           >
@@ -104,7 +113,11 @@ export function Dialog({
 
         {children}
 
-        {footer ? <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{footer}</div> : null}
+        {footer ? (
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </dialog>
   );

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createResource,
   deleteTask,
   getTask,
   increasePriority,
@@ -12,6 +13,7 @@ import {
 } from '@/lib/api/tasks';
 import type { TaskEditInput } from '@/lib/api/tasks';
 import { queryKeys } from '@/lib/query/keys';
+import type { CreateResourceInput } from '@/types/api';
 
 export function useTasks() {
   return useQuery({
@@ -54,14 +56,16 @@ function useTaskMutation<TVariables, TResult>(
 }
 
 export function useRegisterProductivity() {
-  return useTaskMutation(({ id, percentage }: { id: string; percentage: number }) =>
-    registerProductivity(id, percentage),
+  return useTaskMutation(
+    ({ id, percentage }: { id: string; percentage: number }) =>
+      registerProductivity(id, percentage),
   );
 }
 
 export function useIncreasePriority() {
-  return useTaskMutation(({ id, percentage }: { id: string; percentage: number }) =>
-    increasePriority(id, percentage),
+  return useTaskMutation(
+    ({ id, percentage }: { id: string; percentage: number }) =>
+      increasePriority(id, percentage),
   );
 }
 
@@ -70,7 +74,15 @@ export function useDeleteTask() {
 }
 
 export function useUpdateTask() {
-  return useTaskMutation(({ id, input }: { id: string; input: TaskEditInput }) =>
-    updateTask(id, input),
+  return useTaskMutation(
+    ({ id, input }: { id: string; input: TaskEditInput }) =>
+      updateTask(id, input),
+  );
+}
+
+export function useCreateResource() {
+  return useTaskMutation(
+    ({ taskId, input }: { taskId: string; input: CreateResourceInput }) =>
+      createResource(taskId, input),
   );
 }

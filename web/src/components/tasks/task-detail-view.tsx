@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Layers,
   Pencil,
+  Plus,
   Trash2,
   TrendingDown,
   TrendingUp,
@@ -27,6 +28,7 @@ import {
   useUpdateTask,
 } from '@/components/tasks/use-tasks';
 import { ResourceList } from '@/components/resources/resource-list';
+import { CreateResourceDialog } from '@/components/resources/create-resource-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ErrorState } from '@/components/ui/error-state';
@@ -35,18 +37,23 @@ import { useToast } from '@/components/ui/toast';
 import { getErrorMessage } from '@/lib/api/client';
 import { scoreBand } from '@/lib/domain/score';
 
-type OpenDialog = 'productivity' | 'priority' | 'delete' | null;
+type OpenDialog = 'productivity' | 'priority' | 'delete' | 'resource' | null;
 
 function Section({
   title,
   children,
+  action,
 }: {
   title: string;
   children: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-ink">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -234,6 +241,12 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 
           <Section
             title={`Recursos${task.resources.length > 0 ? ` (${task.resources.length})` : ''}`}
+            action={
+              <Button size="sm" onClick={() => setDialog('resource')}>
+                <Plus aria-hidden className="size-4" />
+                Adicionar recurso
+              </Button>
+            }
           >
             {task.resources.length > 0 ? (
               <ResourceList resources={task.resources} />
@@ -243,7 +256,8 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                   aria-hidden
                   className="size-4 shrink-0 text-ink-faint"
                 />
-                Nenhum material cadastrado para esta tarefa.
+                Adicione uma aula, um livro ou um link para consultar enquanto
+                estuda.
               </p>
             )}
           </Section>
@@ -310,6 +324,14 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
           </Section>
         </>
       )}
+
+      {dialog === 'resource' ? (
+        <CreateResourceDialog
+          taskId={taskId}
+          taskTitle={task.title}
+          onClose={close}
+        />
+      ) : null}
 
       {dialog === 'productivity' ? (
         <ProductivityDialog

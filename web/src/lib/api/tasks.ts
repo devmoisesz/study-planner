@@ -1,4 +1,5 @@
 import type {
+  CreateResourceInput,
   CreateTaskInput,
   Productivity,
   RankedTask,
@@ -92,6 +93,16 @@ export async function deleteTask(id: string): Promise<void> {
 
 export async function listResources(): Promise<ResourceWithTask[]> {
   return apiFetch<ResourceWithTask[]>('/resources');
+}
+
+export async function createResource(
+  taskId: string,
+  input: CreateResourceInput,
+): Promise<Resource> {
+  return apiFetch<Resource>(`/tasks/${taskId}/resources`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 }
 
 export async function getTask(id: string): Promise<TaskDetail> {
