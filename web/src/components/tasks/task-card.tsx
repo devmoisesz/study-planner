@@ -47,6 +47,11 @@ export function TaskCard({
         isHighlighted && 'settle-highlight',
       )}
     >
+      <Link
+        href={`/tarefas/${task.id}`}
+        aria-label={task.title}
+        className="absolute inset-0 z-10 rounded-[inherit] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+      />
       <PriorityRail score={task.score} />
 
       <div className="flex min-h-72 flex-col p-5 pt-6">
@@ -57,12 +62,7 @@ export function TaskCard({
 
         <div className="mt-6 min-w-0 flex-1">
           <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-ink">
-            <Link
-              href={`/tarefas/${task.id}`}
-              className="rounded-sm transition-colors hover:text-brand-strong"
-            >
-              {task.title}
-            </Link>
+            {task.title}
           </h3>
 
           {task.description ? (

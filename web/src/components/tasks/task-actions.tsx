@@ -27,11 +27,21 @@ export function TaskActions({
     <>
       <div className="mt-4 flex items-end gap-1 border-t border-current/10 pt-3">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
-          <Button size="sm" variant="ghost" onClick={onRegisterProductivity}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="relative z-20"
+            onClick={onRegisterProductivity}
+          >
             Produtividade
           </Button>
 
-          <Button size="sm" variant="ghost" onClick={onIncreasePriority}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="relative z-20"
+            onClick={onIncreasePriority}
+          >
             Aumentar prioridade
           </Button>
         </div>
@@ -39,7 +49,7 @@ export function TaskActions({
         <Button
           size="sm"
           variant="ghost"
-          className="size-8 shrink-0 px-0"
+          className="relative z-20 size-8 shrink-0 px-0"
           aria-label={`Mais ações para ${taskTitle}`}
           onClick={() => setSheetOpen(true)}
         >
