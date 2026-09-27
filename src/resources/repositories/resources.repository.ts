@@ -1,11 +1,11 @@
-import type { Resource } from '../../generated/prisma/client.js';
+import type { Resource, ResourceType } from '../../generated/prisma/client.js';
 
 export type ResourceWithTask = Resource & { taskTitle: string };
 
 export interface CreateResourceData {
   title: string;
-  type: 'PDF';
-  url: string;
+  type: ResourceType;
+  url?: string;
   description?: string;
   taskId: string;
 }

@@ -19,6 +19,7 @@ export class ResourcesInMemory extends ResourcesRepository {
     const resource: ResourceWithTask = {
       id: crypto.randomUUID(),
       ...data,
+      url: data.url ?? null,
       description: data.description ?? null,
       createdAt: new Date(),
       taskTitle: '',

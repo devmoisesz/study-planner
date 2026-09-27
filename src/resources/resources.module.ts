@@ -7,13 +7,20 @@ import { ResourcesRepository } from './repositories/resources.repository.js';
 import { UploadPdfController } from './controllers/upload-pdf.controller.js';
 import { UploadPdfService } from './services/upload-pdf.service.js';
 import { TasksModule } from '../tasks/tasks.module.js';
+import { CreateResourceController } from './controllers/create-resource.controller.js';
+import { CreateResourceService } from './services/create-resource.service.js';
 
 @Module({
-  controllers: [ListResourcesController, UploadPdfController],
+  controllers: [
+    ListResourcesController,
+    UploadPdfController,
+    CreateResourceController,
+  ],
   imports: [DatabaseModule, TasksModule],
   providers: [
     ListResourcesService,
     UploadPdfService,
+    CreateResourceService,
     PrismaResourcesRepository,
     {
       provide: ResourcesRepository,
