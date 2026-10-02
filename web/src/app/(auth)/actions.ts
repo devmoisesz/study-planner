@@ -37,6 +37,27 @@ function apiOrigin(): string {
   );
 }
 
+function logAuthError(
+  action: 'login' | 'register',
+  stage: string,
+  error: unknown,
+): void {
+  const cause = error instanceof Error ? error.cause : undefined;
+
+  console.error(`[auth] ${action} failed`, {
+    stage,
+    apiOrigin: apiOrigin(),
+    status: error instanceof AuthApiError ? error.status : undefined,
+    errorName: error instanceof Error ? error.name : 'UnknownError',
+    message: error instanceof Error ? error.message : 'Unknown error',
+    causeCode:
+      cause && typeof cause === 'object' && 'code' in cause
+        ? cause.code
+        : undefined,
+    causeMessage: cause instanceof Error ? cause.message : undefined,
+  });
+}
+
 async function post<T>(path: string, data: object): Promise<T> {
   const response = await fetch(`${apiOrigin()}${path}`, {
     method: 'POST',
@@ -94,10 +115,15 @@ export async function loginAction(
     };
   }
 
+  let stage = 'POST /sessions';
+
   try {
     const session = await post<SessionResponse>('/sessions', parsed.data);
+    stage = 'createSession';
     await createSession(session.accessToken);
   } catch (error) {
+    logAuthError('login', stage, error);
+
     return {
       message:
         error instanceof AuthApiError && error.status === 401
@@ -129,16 +155,21 @@ export async function registerAction(
   }
 
   let userCreated = false;
+  let stage = 'POST /users';
 
   try {
     await post('/users', parsed.data);
     userCreated = true;
+    stage = 'POST /sessions';
     const session = await post<SessionResponse>('/sessions', {
       email: parsed.data.email,
       password: parsed.data.password,
     });
+    stage = 'createSession';
     await createSession(session.accessToken);
   } catch (error) {
+    logAuthError('register', stage, error);
+
     if (error instanceof AuthApiError && error.status === 409) {
       return {
         fieldErrors: { email: 'Já existe uma conta com este e-mail.' },
